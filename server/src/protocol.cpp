@@ -3,6 +3,8 @@
 #include <sstream>
 #include "server.hpp"
 #include "protocol.hpp"
+#include <vector>
+
 
 Protocol::Protocol() {}
 

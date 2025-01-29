@@ -9,5 +9,7 @@ class Game {
         Game();
         ~Game();
         void gameManager();
+        std::pair<float, float> handlePlayerMovement(sf::RenderWindow& window, std::pair<float, float>& playerPosition);
     private:
+        float _speed = 5.0f; 
 };

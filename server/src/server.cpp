@@ -9,6 +9,7 @@
 #include <config.hpp>
 #include <sys/select.h>
 #include <sstream>
+#include <vector>
 #include "server.hpp"
 #include "protocol.hpp"
 
