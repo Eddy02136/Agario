@@ -4,6 +4,7 @@
 #include "network.hpp"
 #include "System.hpp"
 #include "game.hpp"
+#include "menu.hpp"
 
 Game::Game() {}
 
@@ -17,6 +18,7 @@ static std::pair<float, float> normalize(const std::pair<float, float>& vector) 
 void Game::gameManager() {
     sf::RenderWindow window(sf::VideoMode(1280, 720), "Agario");
     Network network;
+    Menu menu;
     GameEngine::System system;
     network.connectToServer();
 
@@ -27,11 +29,18 @@ void Game::gameManager() {
     window.setView(view);
 
     while (window.isOpen()) {
-        network.handleSelect(direction);
+        //network.handleSelect(direction);
+        window.clear();
         sf::Event event;
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed)
                 window.close();
+        }
+        
+        if (!Menu::get().getIsPlayed()) {
+            Menu::get().displayMainMenu(window, system);
+        } else {
+            network.handleSelect(direction);
         }
 
         view.setCenter(playerPosition.first, playerPosition.second);
@@ -39,7 +48,6 @@ void Game::gameManager() {
 
         direction = handlePlayerMovement(window, playerPosition);
 
-        window.clear();
         std::map<int, GameEngine::Entity> entities = network.getEntities();
         system.render(window, entities);
         window.display();
