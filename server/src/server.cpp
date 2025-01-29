@@ -10,10 +10,20 @@
 #include <sys/select.h>
 #include <sstream>
 #include "server.hpp"
+#include "protocol.hpp"
 
 Server::Server() {}
 
+Server& Server::get() {
+    static Server instance;
+    return instance;
+}
+
 Server::~Server() {}
+
+std::map<int, Client>& Server::getClients() {
+    return this->_clients;
+}
 
 void Server::init() {
 	int opt = 1;
@@ -56,14 +66,6 @@ void Server::manage_file_descriptors() {
     }
 }
 
-std::string Server::get_connected_clients() const {
-    std::string client_list = "PLAYER_CALLBACK " + std::to_string(this->id) + "\n";
-    for (const auto &client : this->_clients) {
-        client_list += "PLAYER_BROADCAST " + std::to_string(client.first) + "\n";
-    }
-    return client_list;
-}
-
 void Server::serialize (
     const std::string &str, std::ostream &out, char key)
 {
@@ -92,28 +94,50 @@ void Server::sendToClient(int client_socket, const std::string &msg) {
     std::ostringstream out;
     this->serialize(msg, out, this->_key);
     std::string serialized = out.str();
-    std::cout << "Sending message to client: " << serialized << std::endl;
+    std::cout << "[Server] Sending message to client: " << serialized << std::endl;
     if (send(client_socket, serialized.c_str(), serialized.size(), 0) < 0) {
-        std::cerr << "Failed to send message to client." << std::endl;
+        std::cerr << "[Server] Failed to send message to client." << std::endl;
+    }
+}
+
+std::string Server::receiveFromClient(int clientSocket) {
+    char buffer[1024] = {0};
+    std::string data;
+    ssize_t bytesReceived = recv(clientSocket, buffer, 1024, 0);
+    if (bytesReceived < 0) {
+        throw std::runtime_error("Failed to receive data");
+    }
+    data = std::string(buffer, bytesReceived);
+    std::istringstream in(data);
+    std::cout << "Received: " << data << std::endl;
+    data = deserialize(in, _key);
+    std::cout << "Deserialized: " << data << std::endl;
+    return data;
+}
+
+void Server::sendToAllClients(const std::string &msg) {
+    for (auto &client : this->_clients) {
+        sendToClient(client.second.getSocket(), msg);
+    }
+}
+
+void Server::sendToAllClientsExcept(int client_id, const std::string &msg) {
+    for (auto &client : this->_clients) {
+        if (client.first != client_id) {
+            sendToClient(client.second.getSocket(), msg);
+        }
     }
 }
 
 void Server::add_client() {
     int client_socket = accept(this->_tcpSocket, NULL, NULL);
     if (client_socket < 0) {
-        std::cerr << "Failed to accept new client." << std::endl;
+        std::cerr << "[Server] Failed to accept new client." << std::endl;
     } else {
         Client new_client(client_socket);
-        std::cout << "New client connected. Id = " << this->id << std::endl;
-        std::string connected_clients = get_connected_clients();
-        sendToClient(client_socket, connected_clients);
-        std::string new_client_msg = "PLAYER_BROADCAST " + std::to_string(this->id) + "\n";
-        for (auto &client : this->_clients) {
-            if (client.second.getSocket() != client_socket) {
-                sendToClient(client.second.getSocket(), new_client_msg);
-            }
-        }
-		this->_clients.insert(std::make_pair(this->id, new_client));
+        std::cout << "[Server] New client connected with id: " << this->id << std::endl;
+        this->_clients.insert(std::make_pair(this->id, new_client));
+        std::cout << "[Server] Current number of clients: " << this->_clients.size() << std::endl;
         this->id += 2;
     }
 }
@@ -130,6 +154,11 @@ void Server::run() {
     	    if (FD_ISSET(this->_tcpSocket, &this->rfds)) {
         	    add_client();
     	    }
+            for (auto &client : this->_clients) {
+                if (FD_ISSET(client.second.getSocket(), &this->rfds)) {
+                    Protocol::get().handle_message(client.second.getSocket(), this->_clients);
+                }
+            }
 	    } catch (const std::exception &e) {
 		    std::cerr << e.what() << std::endl;
 		    return;

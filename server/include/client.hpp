@@ -14,8 +14,12 @@ class Client {
         Client(int socket);
         ~Client();
         int getSocket() const;
+        std::string getName() const;
+        void setName(std::string name);
         void setSocket(int socket);
+        std::pair<float, float> getPosition() const;
     private:
+        std::string _name = "";
         int _socket = -1;
         std::pair<float, float> _position;
 };

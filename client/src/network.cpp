@@ -35,6 +35,11 @@ void Network::connectToServer() {
     if (connect(_socket, (struct sockaddr *)&server, sizeof(server)) < 0) {
         throw std::runtime_error("Failed to connect to server");
     }
+    std::string name = "Guest";
+    std::string data = "1 " + name + " " + "\n";
+    std::ostringstream out;
+    serialize(data, out, _key);
+    send(_socket, out.str().c_str(), out.str().size(), 0);
 }
 
 std::map<int, GameEngine::Entity> Network::getEntities() const {
@@ -86,20 +91,22 @@ void Network::handleSelect() {
                 if (line.empty()) {
                     continue;
                 }
-                if (line.compare(0, 15, "PLAYER_CALLBACK") == 0) {
+                if (line.compare(0, 1, "2") == 0) {
                     std::vector<std::string> args = splitString(line, ' ');
                     std::cout << "Callback" << std::endl;
-                    if (args.size() == 2) {
+                    if (args.size() == 4) {
                         int id = std::stoi(args[1]);
-                        _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, 30), Color({133, 6, 6, 255}), Position({{0, 0}}));
+                        std::pair<float, float> pos = {std::stof(args[2]), std::stof(args[3])};
+                        _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, 30), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}));
                     }
                 }
-                if (line.compare(0, 16, "PLAYER_BROADCAST") == 0) {
+                if (line.compare(0, 1, "3") == 0) {
                     std::cout << "Broadcast" << std::endl;
                     std::vector<std::string> args = splitString(line, ' ');
-                    if (args.size() == 2) {
+                    if (args.size() == 4) {
                         int id = std::stoi(args[1]);
-                        _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, 30), Color({133, 6, 6, 255}), Position({{100, 50}}));
+                        std::pair<float, float> pos = {std::stof(args[2]), std::stof(args[3])};
+                        _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, 30), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}));
                     }
                 }
             }
