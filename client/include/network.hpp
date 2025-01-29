@@ -12,7 +12,7 @@ class Network {
         ~Network();
         void connectToServer();
         std::string receiveData();
-        void handleSelect();
+        void handleSelect(std::pair<float, float> direction);
         void serialize ( const std::string &str, std::ostream &out, char key);
         std::string deserialize(std::istream &in, char key);
         std::map<int, GameEngine::Entity> getEntities() const;

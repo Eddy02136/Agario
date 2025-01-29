@@ -58,11 +58,27 @@ void Protocol::create_player_broadcast(std::map<int, Client>& clients) {
     }
 }
 
-void Protocol::handle_message(int clientSocket, std::map<int, Client>& clients) {
+void Protocol::update_position(int id, std::map<int, Client>& clients, std::pair<float, float> direction) {
+    auto client = clients.find(id);
+    if (client == clients.end()) {
+        std::cerr << "Client not found" << std::endl;
+        return;
+    }
+    auto clientPos = client->second.getPosition();
+    clientPos.first += direction.first * client->second.getSpeed();
+    clientPos.second += direction.second * client->second.getSpeed();
+    client->second.setPosition(clientPos);
+    std::string data = std::to_string(OpCode::UPDATE_POSITION) + " " + std::to_string(id) + " " + std::to_string(clientPos.first) + " " + std::to_string(clientPos.second) + "\n";
+    Server::get().sendToClient(client->second.getSocket(), data);
+}
+
+void Protocol::handle_message(int id, int clientSocket, std::map<int, Client>& clients) {
     try {
         std::string data = Server::get().receiveFromClient(clientSocket);
         std::vector<std::string> datas = splitString(data, '\n');
         int opCode = 0;
+        float x = 0;
+        float y = 0;
         std::string name;
         
         for (const auto &line : datas) {
@@ -75,6 +91,12 @@ void Protocol::handle_message(int clientSocket, std::map<int, Client>& clients) 
                 case CREATE_PLAYER:
                     name = args[1];
                     Protocol::get().create_player(clients, name);
+                    break;
+
+                case UPDATE_POSITION:
+                    x = std::stof(args[1]);
+                    y = std::stof(args[2]);
+                    Protocol::get().update_position(id, clients, {x, y});
                     break;
 
                 case DEFAULT:

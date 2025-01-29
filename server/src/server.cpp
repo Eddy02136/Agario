@@ -117,6 +117,10 @@ std::string Server::receiveFromClient(int clientSocket) {
 }
 
 void Server::sendToAllClients(const std::string &msg) {
+    if (this->_clients.empty()) {
+        std::cerr << "[Server] No clients connected." << std::endl;
+        return;
+    }
     for (auto &client : this->_clients) {
         sendToClient(client.second.getSocket(), msg);
     }
@@ -157,7 +161,7 @@ void Server::run() {
     	    }
             for (auto &client : this->_clients) {
                 if (FD_ISSET(client.second.getSocket(), &this->rfds)) {
-                    Protocol::get().handle_message(client.second.getSocket(), this->_clients);
+                    Protocol::get().handle_message(client.first, client.second.getSocket(), this->_clients);
                 }
             }
 	    } catch (const std::exception &e) {

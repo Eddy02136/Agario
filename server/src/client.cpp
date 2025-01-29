@@ -30,8 +30,16 @@ std::pair<float, float> Client::getPosition() const {
     return this->_position;
 }
 
+void Client::setPosition(std::pair<float, float> pos) {
+    this->_position = pos;
+}
+
 void Client::setSocket(int socket) {
     this->_socket = socket;
+}
+
+float Client::getSpeed() const {
+    return this->speed;
 }
 
 Client::~Client() {}

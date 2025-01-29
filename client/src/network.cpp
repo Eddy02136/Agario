@@ -7,6 +7,7 @@
 #include <components/Shape.hpp>
 #include <components/Color.hpp>
 #include <components/Position.hpp>
+#include "System.hpp"
 #include "network.hpp"
 
 Network::Network() : _ip("127.0.0.1"), _port(8080) {}
@@ -70,9 +71,10 @@ std::string Network::deserialize(std::istream &in, char key) {
     return std::string(buffer.begin(), buffer.end());
 }
 
-void Network::handleSelect() {
+void Network::handleSelect(std::pair<float, float> direction) {
     fd_set readfds;
     fd_set writefds;
+    GameEngine::System system;
     int ret;
 
     FD_ZERO(&readfds);
@@ -109,7 +111,22 @@ void Network::handleSelect() {
                         _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, 30), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}));
                     }
                 }
+                if (line.compare(0, 1, "4") == 0) {
+                    std::cout << "Update Position" << std::endl;
+                    std::vector<std::string> args = splitString(line, ' ');
+                    if (args.size() == 4) {
+                        int id = std::stoi(args[1]);
+                        std::pair<float, float> pos = {std::stof(args[2]), std::stof(args[3])};
+                        system.update(id, _entities, GameEngine::UpdateType::Position, pos, 0);
+                    }
+                }
             }
+        }
+        if (FD_ISSET(_socket, &writefds)) {
+            std::string data = "4 " + std::to_string(direction.first) + " " + std::to_string(direction.second) + "\n";
+            std::ostringstream out;
+            serialize(data, out, _key);
+            send(_socket, out.str().c_str(), out.str().size(), 0);
         }
     }
 }
