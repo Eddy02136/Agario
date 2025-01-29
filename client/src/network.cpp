@@ -41,6 +41,30 @@ std::map<int, GameEngine::Entity> Network::getEntities() const {
     return _entities;
 }
 
+void Network::serialize (
+    const std::string &str, std::ostream &out, char key)
+{
+    size_t size = str.size();
+    out.write(reinterpret_cast<const char *>(&size), sizeof(size));
+
+    std::vector<char> buffer(str.begin(), str.end());
+    for (size_t i = 0; i < size; i++) {
+        buffer.data()[i] ^= key;
+    }
+    out.write(buffer.data(), static_cast<std::streamsize>(size));
+}
+
+std::string Network::deserialize(std::istream &in, char key) {
+    size_t size;
+    in.read(reinterpret_cast<char *>(&size), sizeof(size));
+    std::vector<char> buffer(size);
+    in.read(buffer.data(), static_cast<std::streamsize>(size));
+    for (size_t i = 0; i < size; i++) {
+        buffer[i] ^= key;
+    }
+    return std::string(buffer.begin(), buffer.end());
+}
+
 void Network::handleSelect() {
     fd_set readfds;
     fd_set writefds;
@@ -86,11 +110,15 @@ void Network::handleSelect() {
 std::string Network::receiveData() {
     char buffer[1024] = {0};
     std::string data;
-    if (recv(_socket, buffer, 1024, 0) < 0) {
+    ssize_t bytesReceived = recv(_socket, buffer, 1024, 0);
+    if (bytesReceived < 0) {
         throw std::runtime_error("Failed to receive data");
     }
-    buffer[1023] = '\0';
-    data = buffer;
+    data = std::string(buffer, bytesReceived);
+    std::istringstream in(data);
+    std::cout << "Received: " << data << std::endl;
+    data = deserialize(in, _key);
+    std::cout << "Deserialized: " << data << std::endl;
     return data;
 }
 

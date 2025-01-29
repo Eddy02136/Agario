@@ -13,11 +13,14 @@ class Network {
         void connectToServer();
         std::string receiveData();
         void handleSelect();
+        void serialize ( const std::string &str, std::ostream &out, char key);
+        std::string deserialize(std::istream &in, char key);
         std::map<int, GameEngine::Entity> getEntities() const;
 
     private:
         std::map<int, GameEngine::Entity> _entities;
         std::string _ip;
+        char _key = 0xA3;
         int _port;
         int _socket;
 };

@@ -8,6 +8,7 @@
 #include <iostream>
 #include <config.hpp>
 #include <sys/select.h>
+#include <sstream>
 #include "server.hpp"
 
 Server::Server() {}
@@ -63,6 +64,40 @@ std::string Server::get_connected_clients() const {
     return client_list;
 }
 
+void Server::serialize (
+    const std::string &str, std::ostream &out, char key)
+{
+    size_t size = str.size();
+    out.write(reinterpret_cast<const char *>(&size), sizeof(size));
+
+    std::vector<char> buffer(str.begin(), str.end());
+    for (size_t i = 0; i < size; i++) {
+        buffer.data()[i] ^= key;
+    }
+    out.write(buffer.data(), static_cast<std::streamsize>(size));
+}
+
+std::string Server::deserialize(std::istream &in, char key) {
+    size_t size;
+    in.read(reinterpret_cast<char *>(&size), sizeof(size));
+    std::vector<char> buffer(size);
+    in.read(buffer.data(), static_cast<std::streamsize>(size));
+    for (size_t i = 0; i < size; i++) {
+        buffer[i] ^= key;
+    }
+    return std::string(buffer.begin(), buffer.end());
+}
+
+void Server::sendToClient(int client_socket, const std::string &msg) {
+    std::ostringstream out;
+    this->serialize(msg, out, this->_key);
+    std::string serialized = out.str();
+    std::cout << "Sending message to client: " << serialized << std::endl;
+    if (send(client_socket, serialized.c_str(), serialized.size(), 0) < 0) {
+        std::cerr << "Failed to send message to client." << std::endl;
+    }
+}
+
 void Server::add_client() {
     int client_socket = accept(this->_tcpSocket, NULL, NULL);
     if (client_socket < 0) {
@@ -71,15 +106,11 @@ void Server::add_client() {
         Client new_client(client_socket);
         std::cout << "New client connected. Id = " << this->id << std::endl;
         std::string connected_clients = get_connected_clients();
-        if (send(client_socket, connected_clients.c_str(), connected_clients.size(), 0) < 0) {
-            std::cerr << "Failed to send connected clients list to new client." << std::endl;
-        }
+        sendToClient(client_socket, connected_clients);
         std::string new_client_msg = "PLAYER_BROADCAST " + std::to_string(this->id) + "\n";
         for (auto &client : this->_clients) {
             if (client.second.getSocket() != client_socket) {
-                if (send(client.second.getSocket(), new_client_msg.c_str(), new_client_msg.size(), 0) < 0) {
-                    std::cerr << "Failed to notify client " << client.first << " about the new connection." << std::endl;
-                }
+                sendToClient(client.second.getSocket(), new_client_msg);
             }
         }
 		this->_clients.insert(std::make_pair(this->id, new_client));
