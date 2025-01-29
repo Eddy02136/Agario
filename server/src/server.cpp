@@ -119,20 +119,20 @@ void Server::add_client() {
 }
 
 void Server::run() {
-	int result;
-	while (true) {
-		try {
-			manage_file_descriptors();
-			result = select(FD_SETSIZE, &this->rfds, &this->wfds, NULL, NULL);
-    		if (result <= SUCCESS) {
-        		throw std::runtime_error("Select failed.");
-    		}
-    		if (FD_ISSET(this->_tcpSocket, &this->rfds)) {
-        		add_client();
-    		}
-		} catch (const std::exception &e) {
-			std::cerr << e.what() << std::endl;
-			return;
-		}
-	}
+    int result;
+    while (true) {
+        try {
+		    manage_file_descriptors();
+		    result = select(FD_SETSIZE, &this->rfds, &this->wfds, NULL, NULL);
+    	    if (result <= SUCCESS) {
+        	    throw std::runtime_error("Select failed.");
+    	    }
+    	    if (FD_ISSET(this->_tcpSocket, &this->rfds)) {
+        	    add_client();
+    	    }
+	    } catch (const std::exception &e) {
+		    std::cerr << e.what() << std::endl;
+		    return;
+        }
+    }
 }
