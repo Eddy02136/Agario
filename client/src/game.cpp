@@ -8,6 +8,11 @@
 
 Game::Game() {}
 
+Game& Game::get() {
+    static Game instance;
+    return instance;
+}
+
 static std::pair<float, float> normalize(const std::pair<float, float>& vector) {
     float length = std::sqrt(vector.first * vector.first + vector.second * vector.second);
     if (length != 0)
@@ -35,6 +40,7 @@ void Game::gameManager() {
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed)
                 window.close();
+            Menu::get().setupInput(event);
         }
         
         if (!Menu::get().getIsPlayed()) {
@@ -63,6 +69,15 @@ std::pair<float, float> Game::handlePlayerMovement(sf::RenderWindow& window, std
     std::pair<float, float> normalizedDirection = normalize(direction);
     std::cout << "Normalized direction: " << normalizedDirection.first << " " << normalizedDirection.second << std::endl;
     return normalizedDirection;
+}
+
+
+std::string Game::getUsername() {
+    return this->_username;
+}
+
+void Game::setUsername(std::string username) {
+    _username = username;
 }
 
 Game::~Game() {}

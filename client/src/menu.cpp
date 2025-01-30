@@ -43,17 +43,40 @@ GameEngine::Entity Menu::createEntityInput(int id, int fontSize, const std::vect
 }
 
 
+void Menu::setupInput(const sf::Event& event) {
+    if (event.type == sf::Event::TextEntered) {
+        if (_isUsernameClicked) {
+            std::string username = Game::get().getUsername();
+            if (event.text.unicode == '\b') {
+                if (!username.empty()) {
+                    username.pop_back();
+                }
+                Game::get().setUsername(username);
+            } else if (event.text.unicode < 128 && username.size() < 15) {
+                username += static_cast<char>(event.text.unicode);
+            }
+            Game::get().setUsername(username);
+        }
+    }
+}
+
 void Menu::displayMainMenu(sf::RenderWindow& window, GameEngine::System system) {
     if (!_entitiesInitialized) {
         int entityId = 0;
 
+        _entitiesMenu.emplace(entityId, createEntityRect(entityId++,{250, 50}, {{695, 200}}, sf::Color(169, 169, 169), [this]() {this->_isUsernameClicked = true;}));
+        _entitiesMenu.emplace(entityId, createEntityInput(entityId++, 30, {{600, 220}}, "Username:"));
+        _entitiesMenu.emplace(entityId, createEntityInput(entityId++, 30, {{705, 205}}, ""));
+        _usernameId = entityId;
         _entitiesMenu.emplace(entityId, createEntityRect(entityId++, {170, 70}, {{590, 290}}, sf::Color::Transparent, [this]() { this->_isPlayed = true; }));
 
-        _entitiesMenu.emplace( entityId, createEntityText(entityId++, "PLAY", {{680, 330}}, 50));
-        _entitiesMenu.emplace(entityId, createEntityRect(entityId++, {170, 70}, {{590, 390}}, sf::Color::Transparent, [this, &window]() { window.close(); }));
+        _entitiesMenu.emplace(entityId, createEntityText(entityId++, "PLAY", {{680, 330}}, 50));
+        _entitiesMenu.emplace(entityId, createEntityRect(entityId++, {170, 70}, {{590, 390}}, sf::Color::Transparent, [this, &window]() { window.close(); this->_isUsernameClicked = false; }));
 
-        _entitiesMenu.emplace( entityId, createEntityText(entityId++, "QUIT", {{680, 430}}, 50));
+        _entitiesMenu.emplace(entityId, createEntityText(entityId++, "QUIT", {{680, 430}}, 50));
         _entitiesInitialized = true;
+    } else {
+        _entitiesMenu.at(_usernameId).getComponent<Text>().setString(Game::get().getUsername());
     }
     system.render(window, _entitiesMenu);
 }
