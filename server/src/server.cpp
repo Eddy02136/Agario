@@ -96,8 +96,17 @@ void Server::sendToClient(int client_socket, const std::string &msg) {
     this->serialize(msg, out, this->_key);
     std::string serialized = out.str();
     std::cout << "[Server] Sending message to client: " << serialized << std::endl;
-    if (send(client_socket, serialized.c_str(), serialized.size(), 0) < 0) {
-        std::cerr << "[Server] Failed to send message to client." << std::endl;
+    const size_t MAX_SIZE = 1024;
+    size_t totalSent = 0;
+    size_t msgLength = serialized.size();
+    while (totalSent < msgLength) {
+        size_t chunkSize = std::min(MAX_SIZE, msgLength - totalSent);
+        ssize_t sent = send(client_socket, serialized.c_str() + totalSent, chunkSize, 0);
+        if (sent < 0) {
+            std::cerr << "[Server] Failed to send message to client." << std::endl;
+            return;
+        }
+        totalSent += sent;
     }
 }
 
@@ -112,9 +121,8 @@ std::string Server::receiveFromClient(int clientSocket) {
     }
     data = std::string(buffer, bytesReceived);
     std::istringstream in(data);
-    std::cout << "Received: " << data << std::endl;
     data = deserialize(in, _key);
-    std::cout << "Deserialized: " << data << std::endl;
+    std::cout << "Received: " << data << std::endl;
     return data;
 }
 

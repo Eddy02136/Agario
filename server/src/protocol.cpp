@@ -68,14 +68,15 @@ void Protocol::update_position(int id, std::map<int, Client>& clients, std::pair
     clientPos.first += direction.first * client->second.getSpeed();
     clientPos.second += direction.second * client->second.getSpeed();
     client->second.setPosition(clientPos);
-    std::string data = std::to_string(OpCode::UPDATE_POSITION) + " " + std::to_string(id) + " " + std::to_string(clientPos.first) + " " + std::to_string(clientPos.second) + "\n";
-    Server::get().sendToClient(client->second.getSocket(), data);
+    for (auto &client : clients) {
+        std::string data = std::to_string(OpCode::UPDATE_POSITION) + " " + std::to_string(id) + " " + std::to_string(clientPos.first) + " " + std::to_string(clientPos.second) + "\n";
+        Server::get().sendToClient(client.second.getSocket(), data);
+    }
 }
 
 bool Protocol::handle_message(int id, int clientSocket, std::map<int, Client>& clients) {
     try {
         std::string data = Server::get().receiveFromClient(clientSocket);
-        std::vector<std::string> datas = splitString(data, '\n');
         int opCode = 0;
         float x = 0;
         float y = 0;
@@ -86,6 +87,7 @@ bool Protocol::handle_message(int id, int clientSocket, std::map<int, Client>& c
             close(clientSocket);
             return true;
         }
+        std::vector<std::string> datas = splitString(data, '\n');
         for (const auto &line : datas) {
             if (line.empty()) {
                 continue;

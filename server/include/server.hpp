@@ -13,8 +13,6 @@
 
 class Server {
   public:
-    Server();
-    ~Server();
     static Server& get();
     void init();
     void run();
@@ -28,6 +26,8 @@ class Server {
     void sendToAllClients(const std::string &msg);
     void sendToAllClientsExcept(int client_id, const std::string &msg);
   private:
+    Server();
+    ~Server();
     std::map<int, Client> _clients;
     int _tcpSocket = -1;
     char _key = 0xA3;

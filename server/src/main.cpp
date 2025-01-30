@@ -10,11 +10,9 @@
 #include "server.hpp"
 
 int main() {
-  Server server;
-
   try {
-    server.init();
-    server.run();
+    Server::get().init();
+    Server::get().run();
   } catch (const std::exception &e) {
     std::cerr << e.what() << std::endl;
     return ERROR;

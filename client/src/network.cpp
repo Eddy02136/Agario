@@ -61,10 +61,19 @@ void Network::serialize (
 }
 
 std::string Network::deserialize(std::istream &in, char key) {
-    size_t size;
-    in.read(reinterpret_cast<char *>(&size), sizeof(size));
+    size_t size = 0;
+    in.clear();
+
+    if (!in.read(reinterpret_cast<char *>(&size), sizeof(size))) {
+        return "";
+    }
+
+    if (size > static_cast<size_t>(in.rdbuf()->in_avail())) {
+        return "";
+    }
     std::vector<char> buffer(size);
     in.read(buffer.data(), static_cast<std::streamsize>(size));
+    std::cout << "Buffer: " << std::string(buffer.begin(), buffer.end()) << std::endl;
     for (size_t i = 0; i < size; i++) {
         buffer[i] ^= key;
     }
@@ -138,6 +147,7 @@ std::string Network::receiveData() {
     if (bytesReceived < 0) {
         throw std::runtime_error("Failed to receive data");
     }
+    std::cout << "Bytes received: " << bytesReceived << std::endl;
     data = std::string(buffer, bytesReceived);
     std::istringstream in(data);
     std::cout << "Received: " << data << std::endl;
