@@ -4,6 +4,7 @@
 
 
 #include "client.hpp"
+#include "unistd.h"
 #include <cstdlib>
 #include <ctime>
 

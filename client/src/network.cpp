@@ -90,7 +90,7 @@ void Network::handleSelect(std::pair<float, float> direction) {
     FD_ZERO(&writefds);
     FD_SET(_socket, &readfds);
     FD_SET(_socket, &writefds);
-    ret = select(_socket + 1, &readfds, &writefds, NULL, NULL);
+    ret = select(FD_SETSIZE, &readfds, &writefds, NULL, NULL);
     if (ret == -1) {
         throw std::runtime_error("Failed to select");
     }
