@@ -3,6 +3,7 @@
 #include "protocol.hpp"
 #include <string>
 #include <sstream>
+#include <vector>
 #include "server.hpp"
 
 Protocol::Protocol() {}

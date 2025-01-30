@@ -10,7 +10,7 @@
 #include "System.hpp"
 #include "network.hpp"
 
-Network::Network() : _ip("127.0.0.1"), _port(8080) {}
+Network::Network() : _ip("192.168.1.19"), _port(8080) {}
 
 static std::vector<std::string> splitString(const std::string &data, const char delimiter) {
     std::stringstream str(data);
@@ -101,6 +101,14 @@ void Network::handleSelect(std::pair<float, float> direction) {
         if (FD_ISSET(_socket, &readfds)) {
             std::string data = receiveData();
             std::vector<std::string> datas = splitString(data, '\n');
+            if (_buffer.length() > 0) {
+                datas[0] = _buffer + datas[0];
+                _buffer.clear();
+            }
+            if (data[data.length() - 1] != '\n') {
+                _buffer = datas[datas.size() - 1];
+                datas.pop_back();
+            }
             for (const auto &line : datas) {
                 if (line.empty()) {
                     continue;
