@@ -10,7 +10,7 @@
 #include "System.hpp"
 #include "network.hpp"
 
-Network::Network() : _ip("127.0.0.1"), _port(8080) {}
+Network::Network() : _ip("10.15.191.208"), _port(8080) {}
 
 static std::vector<std::string> splitString(const std::string &data, const char delimiter) {
     std::stringstream str(data);
