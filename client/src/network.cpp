@@ -160,6 +160,4 @@ std::string Network::receiveData() {
     return data;
 }
 
-Network::~Network() {
-    close(_socket);
-}
+Network::~Network() {}
