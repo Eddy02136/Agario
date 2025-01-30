@@ -1,10 +1,10 @@
 
 #include <string>
 #include <sstream>
+#include <unistd.h>
 #include "server.hpp"
 #include "protocol.hpp"
 #include <vector>
-
 
 Protocol::Protocol() {}
 
@@ -72,7 +72,7 @@ void Protocol::update_position(int id, std::map<int, Client>& clients, std::pair
     Server::get().sendToClient(client->second.getSocket(), data);
 }
 
-void Protocol::handle_message(int id, int clientSocket, std::map<int, Client>& clients) {
+bool Protocol::handle_message(int id, int clientSocket, std::map<int, Client>& clients) {
     try {
         std::string data = Server::get().receiveFromClient(clientSocket);
         std::vector<std::string> datas = splitString(data, '\n');
@@ -80,7 +80,12 @@ void Protocol::handle_message(int id, int clientSocket, std::map<int, Client>& c
         float x = 0;
         float y = 0;
         std::string name;
-        
+
+        if (data.empty()) {
+            std::cerr << "[Server] Client " << id << " disconnected." << std::endl;
+            close(clientSocket);
+            return true;
+        }
         for (const auto &line : datas) {
             if (line.empty()) {
                 continue;
@@ -107,8 +112,9 @@ void Protocol::handle_message(int id, int clientSocket, std::map<int, Client>& c
             }
         }
     } catch (const std::exception &e) {
-        std::cerr << "Failed to receive message" << e.what() << std::endl;
+        std::cerr << "Failed to receive message: " << e.what() << std::endl;
     }
+    return false;
 }
 
 Protocol::~Protocol() {}

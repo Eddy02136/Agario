@@ -107,6 +107,8 @@ std::string Server::receiveFromClient(int clientSocket) {
     ssize_t bytesReceived = recv(clientSocket, buffer, 1024, 0);
     if (bytesReceived < 0) {
         throw std::runtime_error("Failed to receive data");
+    } else if (bytesReceived == 0) {
+        return "";
     }
     data = std::string(buffer, bytesReceived);
     std::istringstream in(data);
@@ -159,10 +161,17 @@ void Server::run() {
     	    if (FD_ISSET(this->_tcpSocket, &this->rfds)) {
         	    add_client();
     	    }
-            for (auto &client : this->_clients) {
-                if (FD_ISSET(client.second.getSocket(), &this->rfds)) {
-                    Protocol::get().handle_message(client.first, client.second.getSocket(), this->_clients);
+            for (auto client = _clients.begin(); client != _clients.end(); ) {
+                int clientSocket = client->second.getSocket();
+
+                if (FD_ISSET(clientSocket, &this->rfds)) {
+                    bool disconnected = Protocol::get().handle_message(client->first, clientSocket, _clients);
+                    if (disconnected) {
+                        client = _clients.erase(client);
+                        continue;
+                    }
                 }
+                client++;
             }
 	    } catch (const std::exception &e) {
 		    std::cerr << e.what() << std::endl;
