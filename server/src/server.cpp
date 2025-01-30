@@ -182,6 +182,7 @@ void Server::add_client() {
 void Server::handle_client(int id, int clientSocket) {
     try {
         while (true) {
+            manage_file_descriptors();
             if (FD_ISSET(clientSocket, &this->rfds)) {
                 bool disconnected = Protocol::get().handle_message(id, clientSocket, _clients);
                 if (disconnected) {
@@ -189,8 +190,6 @@ void Server::handle_client(int id, int clientSocket) {
                     auto client = _clients.find(id);
                     if (client != _clients.end()) {
                         close(clientSocket);
-                        FD_CLR(clientSocket, &this->rfds);
-                        FD_CLR(clientSocket, &this->wfds);
                         _clients.erase(client);
                         std::cout << "[Server] Client " << id << " disconnected." << std::endl;
                     }
