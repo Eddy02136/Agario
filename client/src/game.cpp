@@ -61,7 +61,6 @@ std::pair<float, float> Game::handlePlayerMovement(sf::RenderWindow& window, std
 
     std::pair<float, float> direction = { targetPosition.first - playerPosition.first, targetPosition.second - playerPosition.second };
     std::pair<float, float> normalizedDirection = normalize(direction);
-    std::cout << "Normalized direction: " << normalizedDirection.first << " " << normalizedDirection.second << std::endl;
     return normalizedDirection;
 }
 

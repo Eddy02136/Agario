@@ -1,10 +1,10 @@
-
+#include <iostream>
+#include "config.hpp"
+#include "protocol.hpp"
 #include <string>
 #include <sstream>
-#include <unistd.h>
-#include "server.hpp"
-#include "protocol.hpp"
 #include <vector>
+#include "server.hpp"
 
 Protocol::Protocol() {}
 
@@ -28,6 +28,7 @@ void Protocol::create_player(std::map<int, Client>& clients, std::string name) {
         std::cerr << "Client list is empty!" << std::endl;
         return;
     }
+
     auto& lastClient = --clients.end();
     lastClient->second.setName(name);
     create_player_callback(clients);
@@ -35,27 +36,34 @@ void Protocol::create_player(std::map<int, Client>& clients, std::string name) {
 }
 
 void Protocol::create_player_callback(std::map<int, Client>& clients) {
+    if (clients.empty()) return;
+
     auto lastClient = --clients.end();
-    std::string data = std::to_string(OpCode::CREATE_PLAYER_CALLBACK) + " " + std::to_string(lastClient->first) + " " + std::to_string(lastClient->second.getPosition().first) + " " + std::to_string(lastClient->second.getPosition().second) + "\n";
-    for (const auto &client : clients) {
-            if (client.first == lastClient->first) continue;
-            std::pair<float, float> pos = client.second.getPosition();
-            data += std::to_string(OpCode::CREATE_PLAYER_BROADCAST) + " " + std::to_string(client.first) + " " + std::to_string(pos.first) + " " + std::to_string(pos.second) + "\n";
+    std::string data = std::to_string(OpCode::CREATE_PLAYER_CALLBACK) + " " +
+                       std::to_string(lastClient->first) + " " +
+                       std::to_string(lastClient->second.getPosition().first) + " " +
+                       std::to_string(lastClient->second.getPosition().second) + "\n";
+    for (auto &client : clients) {
+        if (client.first != lastClient->first) {
+            data += std::to_string(OpCode::CREATE_PLAYER_BROADCAST) + " " +
+                               std::to_string(client.first) + " " +
+                               std::to_string(client.second.getPosition().first) + " " +
+                               std::to_string(client.second.getPosition().second) + "\n";
         }
+    }
     Server::get().sendToClient(lastClient->second.getSocket(), data);
 }
 
 void Protocol::create_player_broadcast(std::map<int, Client>& clients) {
-    std::string data;
-    if (!clients.empty()) {
-        auto lastClient = --clients.end();
-        for (const auto &client : clients) {
-            if (client.first == lastClient->first) continue;
-            std::pair<float, float> pos = lastClient->second.getPosition();
-            std::string newPlayerData = std::to_string(OpCode::CREATE_PLAYER_BROADCAST) + " " + std::to_string(lastClient->first) + " " + std::to_string(pos.first) + " " + std::to_string(pos.second) + "\n";
-            Server::get().sendToClient(client.second.getSocket(), newPlayerData);
-        }
-    }
+    if (clients.empty()) return;
+
+    auto lastClient = --clients.end();
+    std::pair<float, float> pos = lastClient->second.getPosition();
+    std::string newPlayerData = std::to_string(OpCode::CREATE_PLAYER_BROADCAST) + " " +
+                                std::to_string(lastClient->first) + " " +
+                                std::to_string(pos.first) + " " +
+                                std::to_string(pos.second) + "\n";
+    Server::get().sendToAllClientsExcept(lastClient->first, newPlayerData);
 }
 
 void Protocol::update_position(int id, std::map<int, Client>& clients, std::pair<float, float> direction) {
@@ -77,46 +85,56 @@ void Protocol::update_position(int id, std::map<int, Client>& clients, std::pair
 bool Protocol::handle_message(int id, int clientSocket, std::map<int, Client>& clients) {
     try {
         std::string data = Server::get().receiveFromClient(clientSocket);
+        if (data.empty()) {
+            return true;
+        }
+
         int opCode = 0;
         float x = 0;
         float y = 0;
         std::string name;
-
-        if (data.empty()) {
-            std::cerr << "[Server] Client " << id << " disconnected." << std::endl;
-            close(clientSocket);
-            return true;
-        }
+        
         std::vector<std::string> datas = splitString(data, '\n');
+        if (_buffer.length() > 0) {
+            datas[0] = _buffer + datas[0];
+            _buffer.clear();
+        }
+        if (data[data.length() - 1] != '\n') {
+            _buffer = datas[datas.size() - 1];
+            datas.pop_back();
+        }
         for (const auto &line : datas) {
-            if (line.empty()) {
-                continue;
-            }
+            if (line.empty()) continue;
+
             std::vector<std::string> args = splitString(line, ' ');
             opCode = std::stoi(args[0]);
+
             switch (opCode) {
                 case CREATE_PLAYER:
-                    name = args[1];
-                    Protocol::get().create_player(clients, name);
+                    if (args.size() == 2) {
+                        name = args[1];
+                        Protocol::get().create_player(clients, name);
+                    }
                     break;
 
                 case UPDATE_POSITION:
-                    x = std::stof(args[1]);
-                    y = std::stof(args[2]);
-                    Protocol::get().update_position(id, clients, {x, y});
-                    break;
-
-                case DEFAULT:
+                    if (args.size() == 3) {
+                        x = std::stof(args[1]);
+                        y = std::stof(args[2]);
+                        Protocol::get().update_position(id, clients, {x, y});
+                    }
                     break;
 
                 default:
+                    std::cerr << "[Server] Unknown operation code: " << opCode << std::endl;
                     break;
             }
         }
+        return false;
     } catch (const std::exception &e) {
-        std::cerr << "Failed to receive message: " << e.what() << std::endl;
+        std::cerr << "[Server] Exception in client thread: " << e.what() << std::endl;
+        return true;
     }
-    return false;
 }
 
 Protocol::~Protocol() {}

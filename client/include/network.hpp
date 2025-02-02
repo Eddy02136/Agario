@@ -20,6 +20,7 @@ class Network {
     private:
         std::map<int, GameEngine::Entity> _entities;
         std::string _ip;
+        std::string _buffer;
         char _key = 0xA3;
         int _port;
         int _socket;

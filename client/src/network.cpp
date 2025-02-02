@@ -38,9 +38,9 @@ void Network::connectToServer() {
     }
     std::string name = "Guest";
     std::string data = "1 " + name + " " + "\n";
-    std::ostringstream out;
-    serialize(data, out, _key);
-    send(_socket, out.str().c_str(), out.str().size(), 0);
+    //std::ostringstream out;
+    //serialize(data, out, _key);
+    send(_socket, data.c_str(), data.size(), 0);
 }
 
 std::map<int, GameEngine::Entity> Network::getEntities() const {
@@ -84,13 +84,16 @@ void Network::handleSelect(std::pair<float, float> direction) {
     fd_set readfds;
     fd_set writefds;
     GameEngine::System system;
+    struct timeval timeout;
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 500000;
     int ret;
 
     FD_ZERO(&readfds);
     FD_ZERO(&writefds);
     FD_SET(_socket, &readfds);
     FD_SET(_socket, &writefds);
-    ret = select(_socket + 1, &readfds, &writefds, NULL, NULL);
+    ret = select(FD_SETSIZE, &readfds, &writefds, NULL, &timeout);
     if (ret == -1) {
         throw std::runtime_error("Failed to select");
     }
@@ -98,6 +101,14 @@ void Network::handleSelect(std::pair<float, float> direction) {
         if (FD_ISSET(_socket, &readfds)) {
             std::string data = receiveData();
             std::vector<std::string> datas = splitString(data, '\n');
+            if (_buffer.length() > 0) {
+                datas[0] = _buffer + datas[0];
+                _buffer.clear();
+            }
+            if (data[data.length() - 1] != '\n') {
+                _buffer = datas[datas.size() - 1];
+                datas.pop_back();
+            }
             for (const auto &line : datas) {
                 if (line.empty()) {
                     continue;
@@ -133,9 +144,9 @@ void Network::handleSelect(std::pair<float, float> direction) {
         }
         if (FD_ISSET(_socket, &writefds)) {
             std::string data = "4 " + std::to_string(direction.first) + " " + std::to_string(direction.second) + "\n";
-            std::ostringstream out;
-            serialize(data, out, _key);
-            send(_socket, out.str().c_str(), out.str().size(), 0);
+            //std::ostringstream out;
+            //serialize(data, out, _key);
+            send(_socket, data.c_str(), data.size(), 0);
         }
     }
 }
@@ -143,19 +154,18 @@ void Network::handleSelect(std::pair<float, float> direction) {
 std::string Network::receiveData() {
     char buffer[1024] = {0};
     std::string data;
-    ssize_t bytesReceived = recv(_socket, buffer, 1024, 0);
+    ssize_t bytesReceived = recv(_socket, buffer, sizeof(buffer) - 1, 0);
     if (bytesReceived < 0) {
         throw std::runtime_error("Failed to receive data");
     }
+    buffer[bytesReceived] = '\0';
     std::cout << "Bytes received: " << bytesReceived << std::endl;
     data = std::string(buffer, bytesReceived);
-    std::istringstream in(data);
-    std::cout << "Received: " << data << std::endl;
-    data = deserialize(in, _key);
+    //std::istringstream in(data);
+    //std::cout << "Received: " << data << std::endl;
+    //data = deserialize(in, _key);
     std::cout << "Deserialized: " << data << std::endl;
     return data;
 }
 
-Network::~Network() {
-    close(_socket);
-}
+Network::~Network() {}

@@ -10,6 +10,7 @@
 #include <netinet/in.h>
 #include <map>
 #include "client.hpp"
+#include <mutex>
 
 class Server {
   public:
@@ -25,6 +26,9 @@ class Server {
     std::string deserialize(std::istream &in, char key);
     void sendToAllClients(const std::string &msg);
     void sendToAllClientsExcept(int client_id, const std::string &msg);
+    void handle_client(int id, int clientSocket);
+    fd_set& getRds();
+    fd_set& getWds();
   private:
     Server();
     ~Server();
@@ -35,4 +39,5 @@ class Server {
     fd_set rfds;
     fd_set wfds;
     sockaddr_in _tcpAddr{};
+    std::mutex _clientMutex;
 };
