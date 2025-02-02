@@ -10,6 +10,7 @@
 #include <netinet/in.h>
 #include <map>
 #include "client.hpp"
+#include <mutex>
 
 class Server {
   public:
@@ -38,4 +39,5 @@ class Server {
     fd_set rfds;
     fd_set wfds;
     sockaddr_in _tcpAddr{};
+    std::mutex _clientMutex;
 };

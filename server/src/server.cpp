@@ -10,8 +10,6 @@
 #include "server.hpp"
 #include "protocol.hpp"
 
-std::mutex clientMutex;
-
 Server::Server() {}
 
 Server& Server::get() {
@@ -66,6 +64,7 @@ void Server::manage_file_descriptors() {
     FD_ZERO(&this->wfds);
     FD_SET(this->_tcpSocket, &this->rfds);
     FD_SET(this->_tcpSocket, &this->wfds);
+    std::lock_guard<std::mutex> lock(_clientMutex);
     for (auto &client : this->_clients) {
         if (client.second.getSocket() != FAILURE) {
             FD_SET(client.second.getSocket(), &this->rfds);
@@ -87,16 +86,13 @@ void Server::serialize(const std::string &str, std::ostream &out, char key) {
 std::string Server::deserialize(std::istream &in, char key) {
     size_t size = 0;
     in.clear();
-
     if (!in.read(reinterpret_cast<char *>(&size), sizeof(size))) {
         return "";
     }
-
     std::vector<char> buffer(size);
     if (!in.read(buffer.data(), static_cast<std::streamsize>(size))) {
         return "";
     }
-
     for (size_t i = 0; i < size; i++) {
         buffer[i] ^= key;
     }
@@ -169,7 +165,7 @@ void Server::add_client() {
     }
     Client new_client(client_socket);
     {
-        std::lock_guard<std::mutex> lock(clientMutex);
+        std::lock_guard<std::mutex> lock(_clientMutex);
         this->_clients.insert({this->id, new_client});
     }
     std::cout << "[Server] New client connected with id: " << this->id << std::endl;
@@ -182,13 +178,14 @@ void Server::add_client() {
 void Server::handle_client(int id, int clientSocket) {
     try {
         while (true) {
-            manage_file_descriptors();
             if (FD_ISSET(clientSocket, &this->rfds)) {
                 bool disconnected = Protocol::get().handle_message(id, clientSocket, _clients);
                 if (disconnected) {
-                    std::lock_guard<std::mutex> lock(clientMutex);
+                    std::lock_guard<std::mutex> lock(_clientMutex);
                     auto client = _clients.find(id);
                     if (client != _clients.end()) {
+                        FD_CLR(clientSocket, &this->rfds);
+                        FD_CLR(clientSocket, &this->wfds);
                         close(clientSocket);
                         _clients.erase(client);
                         std::cout << "[Server] Client " << id << " disconnected." << std::endl;
