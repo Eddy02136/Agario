@@ -7,25 +7,49 @@
 
 #include "map.hpp"
 
-Map::Map(int width, int height) : _width(width), _height(height) {}
+Map::Map() {}
 
 Map::~Map() {}
 
-void Map::addEntity(int id, const std::pair<int, int> &position) {
-    _positions[id] = position;
+Map &Map::get() {
+    static Map instance;
+    return instance;
 }
 
-void Map::removeEntity(int id) {
-    _positions.erase(id);
+void Map::createMap(int id) {
+    _id = id;
+    int numCells = 100;
+    int cellWidth = _width / numCells;
+    int cellHeight = _height / numCells;
+
+    for (int i = 0; i < numCells; i++) {
+        for (int j = 0; j < numCells; j++) {
+            int x = i * cellWidth + rand() % cellWidth;
+            int y = j * cellHeight + rand() % cellHeight;
+            addFood(i * numCells + j, {x, y});
+        }
+    }
 }
 
-const std::unordered_map<int, std::pair<int, int>> &Map::getPositions() const {
-    return _positions;
+void Map::addFood(int id, const std::pair<int, int> &foodPosition) {
+    _map[id] = foodPosition;
 }
 
-std::pair<int, int> Map::getEntityPosition(int id) const {
-    auto it = _positions.find(id);
-    if (it != _positions.end()) {
+void Map::removeFood(int id) {
+    _map.erase(id);
+}
+
+const std::map<int, std::pair<int, int>> &Map::getMap() const {
+    return _map;
+}
+
+int Map::getId() const {
+    return _id;
+}
+
+std::pair<int, int> Map::getFoodPosition(int id) const {
+    auto it = _map.find(id);
+    if (it != _map.end()) {
         return it->second;
     }
     return {0, 0};

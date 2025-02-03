@@ -10,7 +10,7 @@
 #include "System.hpp"
 #include "network.hpp"
 
-Network::Network() : _ip("10.15.191.208"), _port(8080) {}
+Network::Network() : _ip("127.0.0.1"), _port(8080) {}
 
 static std::vector<std::string> splitString(const std::string &data, const char delimiter) {
     std::stringstream str(data);
@@ -138,6 +138,29 @@ void Network::handleSelect(std::pair<float, float> direction) {
                         int id = std::stoi(args[1]);
                         std::pair<float, float> pos = {std::stof(args[2]), std::stof(args[3])};
                         system.update(id, _entities, GameEngine::UpdateType::Position, pos, 0);
+                    }
+                }
+                if (line.compare(0, 1, "5") == 0) {
+                    std::cout << "Create Map" << std::endl;
+                    std::vector<std::string> args = splitString(line, ' ');
+                    if (args.size() == 2) {
+                        int id = std::stoi(args[1]);
+                        _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, 5), Color({173, 216, 230, 255}));
+                    }
+                }
+                if (line.compare(0, 1, "6") == 0) {
+                    std::cout << "Add Food" << std::endl;
+                    std::vector<std::string> args = splitString(line, ' ');
+                    if (args.size() == 4) {
+                        int id = std::stoi(args[1]);
+                        std::pair<float, float> pos = {std::stof(args[2]), std::stof(args[3])};
+                        if (_entities.find(id) != _entities.end()) {
+                            if (_entities[id].hasComponent<Position>()) {
+                                _entities[id].getComponent<Position>().addPosition(pos.first, pos.second);
+                            } else {
+                                _entities[id].addComponent(Position({{pos.first, pos.second}}));
+                            }
+                        }
                     }
                 }
             }

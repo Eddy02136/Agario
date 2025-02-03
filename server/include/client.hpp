@@ -24,5 +24,5 @@ class Client {
         std::string _name = "";
         int _socket = -1;
         std::pair<float, float> _position;
-        float speed = 0.05;
+        float speed = 0.5;
 };

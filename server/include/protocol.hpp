@@ -12,6 +12,9 @@ class Protocol {
             CREATE_PLAYER_CALLBACK,
             CREATE_PLAYER_BROADCAST,
             UPDATE_POSITION,
+            CREATE_MAP,
+            ADD_FOOD,
+            REMOVE_FOOD,
         };
 
         Protocol();

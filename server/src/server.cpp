@@ -7,6 +7,7 @@
 #include <vector>
 #include <thread>
 #include <mutex>
+#include "map.hpp"
 #include "server.hpp"
 #include "protocol.hpp"
 
@@ -57,6 +58,9 @@ void Server::init() {
     FD_SET(this->_tcpSocket, &this->wfds);
 
     std::cout << "[TCP Socket] Successfully initialized." << std::endl;
+    Map::get().createMap(this->id);
+    this->id++;
+    std::cout << "[Server] Map Successfully created." << std::endl;
 }
 
 void Server::manage_file_descriptors() {
