@@ -10,7 +10,7 @@ class Network {
     public:
         Network();
         ~Network();
-        void connectToServer();
+        void connectToServer(std::string &name);
         std::string receiveData();
         void handleSelect(std::pair<float, float> direction);
         void serialize ( const std::string &str, std::ostream &out, char key);

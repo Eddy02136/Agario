@@ -6,8 +6,6 @@
 
 class Game {
     public:
-        Game();
-        ~Game();
 
         static Game& get();
 
@@ -16,6 +14,9 @@ class Game {
         std::string getUsername();
         void setUsername(std::string username);
     private:
+        Game();
+        ~Game();
         float _speed = 5.0f;
         std::string _username = "";
+        bool _isConnected = false;
 };
