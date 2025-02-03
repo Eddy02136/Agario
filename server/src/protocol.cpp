@@ -3,6 +3,8 @@
 #include "protocol.hpp"
 #include <string>
 #include <sstream>
+#include <vector>
+#include "map.hpp"
 #include "server.hpp"
 
 Protocol::Protocol() {}
@@ -50,6 +52,11 @@ void Protocol::create_player_callback(std::map<int, Client>& clients) {
                                std::to_string(client.second.getPosition().second) + "\n";
         }
     }
+    data += std::to_string(OpCode::CREATE_MAP) + " " + std::to_string(Map::get().getId()) + "\n";
+    std::map<int, std::pair<int, int>> map = Map::get().getMap();
+    for (const auto &food : map) {
+        data += std::to_string(OpCode::ADD_FOOD) + " " + std::to_string(Map::get().getId()) + " " + std::to_string(food.second.first) + " " + std::to_string(food.second.second) + "\n";
+    }
     Server::get().sendToClient(lastClient->second.getSocket(), data);
 }
 
@@ -74,6 +81,9 @@ void Protocol::update_position(int id, std::map<int, Client>& clients, std::pair
     auto clientPos = client->second.getPosition();
     clientPos.first += direction.first * client->second.getSpeed();
     clientPos.second += direction.second * client->second.getSpeed();
+    if (clientPos.first < 0 || clientPos.first > Map::get().getWidth() || clientPos.second < 0 || clientPos.second > Map::get().getHeight()) {
+        return;
+    }
     client->second.setPosition(clientPos);
     for (auto &client : clients) {
         std::string data = std::to_string(OpCode::UPDATE_POSITION) + " " + std::to_string(id) + " " + std::to_string(clientPos.first) + " " + std::to_string(clientPos.second) + "\n";
@@ -94,6 +104,14 @@ bool Protocol::handle_message(int id, int clientSocket, std::map<int, Client>& c
         std::string name;
         
         std::vector<std::string> datas = splitString(data, '\n');
+        if (_buffer.length() > 0) {
+            datas[0] = _buffer + datas[0];
+            _buffer.clear();
+        }
+        if (data[data.length() - 1] != '\n') {
+            _buffer = datas[datas.size() - 1];
+            datas.pop_back();
+        }
         for (const auto &line : datas) {
             if (line.empty()) continue;
 

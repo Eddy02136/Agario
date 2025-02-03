@@ -31,7 +31,6 @@ void GameEngine::System::loadRectangle(GameEngine::Entity& entity,
         sf::RectangleShape rectangle;
         rectangle.setSize(sf::Vector2f(shapeComp.getSize().first,
                                        shapeComp.getSize().second));
-        setPosition(entity, rectangle);
         setColor(entity, rectangle);
         shapeComp.setShape(rectangle);
         if (entity.hasComponent<Texture>() &&
@@ -66,7 +65,6 @@ void GameEngine::System::loadCircle(GameEngine::Entity& entity,
     if (!shapeComp.getIsLoaded()) {
         sf::CircleShape circle;
         circle.setRadius(shapeComp.getRadius());
-        setPosition(entity, circle);
         setColor(entity, circle);
         shapeComp.setShape(circle);
         if (entity.hasComponent<Texture>() &&
@@ -102,11 +100,29 @@ void GameEngine::System::shapeSystem(sf::RenderWindow& window,
         auto& shapeComp = entity.getComponent<Shape>();
         if (shapeComp.getShapeType() == Rectangle) {
             loadRectangle(entity, shapeComp);
-            window.draw(shapeComp.getRect());
+            if (entity.getComponent<Position>().getPositions().size() > 1) {
+                auto& positionComp = entity.getComponent<Position>();
+                for (auto& position : positionComp.getPositions()) {
+                    shapeComp.getRect().setPosition(position.first,
+                                                   position.second);
+                    window.draw(shapeComp.getRect());
+                }
+            } else {
+                window.draw(shapeComp.getRect());
+            }
         }
         if (shapeComp.getShapeType() == Circle) {
             loadCircle(entity, shapeComp);
-            window.draw(shapeComp.getCircle());
+            if (entity.getComponent<Position>().getPositions().size() > 1) {
+                auto& positionComp = entity.getComponent<Position>();
+                for (auto& position : positionComp.getPositions()) {
+                    shapeComp.getCircle().setPosition(position.first,
+                                                   position.second);
+                    window.draw(shapeComp.getCircle());
+                }
+            } else {
+                window.draw(shapeComp.getCircle());
+            }
         }
     }
 }

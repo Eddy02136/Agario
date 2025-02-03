@@ -12,6 +12,9 @@ class Protocol {
             CREATE_PLAYER_CALLBACK,
             CREATE_PLAYER_BROADCAST,
             UPDATE_POSITION,
+            CREATE_MAP,
+            ADD_FOOD,
+            REMOVE_FOOD,
         };
 
         Protocol();
@@ -22,4 +25,7 @@ class Protocol {
         void create_player_broadcast(std::map<int, Client>& clients);
         void update_position(int id, std::map<int, Client>& clients, std::pair<float, float> direction);
         bool handle_message(int id, int clientSocket, std::map<int, Client>& clients);
+
+    private:
+        std::string _buffer;
 };
