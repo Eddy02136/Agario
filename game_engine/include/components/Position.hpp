@@ -19,7 +19,7 @@ class Position : public Component {
     float getPositionY(int id) const;
     void setPositionY(int id, float y);
     void addPosition(float x, float y);
-    void removePosition(int id);
+    void removePosition(std::pair<float, float> pos);
     void display() const override;
 
   private:

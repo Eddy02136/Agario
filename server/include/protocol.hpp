@@ -25,6 +25,7 @@ class Protocol {
         void create_player_broadcast(std::map<int, Client>& clients);
         void update_position(int id, std::map<int, Client>& clients, std::pair<float, float> direction);
         bool handle_message(int id, int clientSocket, std::map<int, Client>& clients);
+        void check_food_collision(const std::pair<float, float>& clientPos, Client& client);
 
     private:
         std::string _buffer;

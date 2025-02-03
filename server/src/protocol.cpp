@@ -6,6 +6,7 @@
 #include <vector>
 #include "map.hpp"
 #include "server.hpp"
+#include <complex>
 
 Protocol::Protocol() {}
 
@@ -72,6 +73,29 @@ void Protocol::create_player_broadcast(std::map<int, Client>& clients) {
     Server::get().sendToAllClientsExcept(lastClient->first, newPlayerData);
 }
 
+void Protocol::check_food_collision(const std::pair<float, float>& clientPos, Client& client) {
+    auto foodMap = Map::get().getMap();
+
+    for (auto& food : foodMap) {
+        int foodId = food.first;
+        const auto& foodPos = food.second;
+
+
+        float dx = clientPos.first + 20  - foodPos.first;
+        float dy = clientPos.second + 20 - foodPos.second;
+        float distance = std::sqrt(dx * dx + dy * dy);
+
+        if (distance <= 30.0f) {
+            std::string data = std::to_string(OpCode::REMOVE_FOOD) + " " +
+                               std::to_string(foodId) + " " +
+                               std::to_string(Map::get().getId()) + " " +
+                               std::to_string(foodPos.first) + " " +
+                               std::to_string(foodPos.second) + " " + "\n";
+            Server::get().sendToClient(client.getSocket(), data);
+        }
+    }
+}
+
 void Protocol::update_position(int id, std::map<int, Client>& clients, std::pair<float, float> direction) {
     auto client = clients.find(id);
     if (client == clients.end()) {
@@ -84,6 +108,9 @@ void Protocol::update_position(int id, std::map<int, Client>& clients, std::pair
     if (clientPos.first < 0 || clientPos.first > Map::get().getWidth() || clientPos.second < 0 || clientPos.second > Map::get().getHeight()) {
         return;
     }
+
+    check_food_collision(clientPos, client->second);
+
     client->second.setPosition(clientPos);
     for (auto &client : clients) {
         std::string data = std::to_string(OpCode::UPDATE_POSITION) + " " + std::to_string(id) + " " + std::to_string(clientPos.first) + " " + std::to_string(clientPos.second) + "\n";
