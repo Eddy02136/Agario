@@ -5,6 +5,7 @@
 ** map.cpp
 */
 
+#include <random>
 #include "map.hpp"
 
 Map::Map() {}
