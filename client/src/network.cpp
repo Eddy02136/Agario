@@ -7,6 +7,7 @@
 #include <components/Shape.hpp>
 #include <components/Color.hpp>
 #include <components/Position.hpp>
+#include <components/View.hpp>
 #include "System.hpp"
 #include "network.hpp"
 
@@ -119,7 +120,8 @@ void Network::handleSelect(std::pair<float, float> direction) {
                     if (args.size() == 4) {
                         int id = std::stoi(args[1]);
                         std::pair<float, float> pos = {std::stof(args[2]), std::stof(args[3])};
-                        _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, 30), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}));
+                        sf::View view = sf::View(sf::FloatRect(0, 0, 1280, 720));
+                        _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, 30), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}), View(view));
                     }
                 }
                 if (line.compare(0, 1, "3") == 0) {
