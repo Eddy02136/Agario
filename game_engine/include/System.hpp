@@ -45,6 +45,7 @@ class System {
     void spriteSystem(sf::RenderWindow& window, Entity& entity);
     void linkSystem(int id, std::map<int, Entity>& entities,
                     std::pair<float, float> newLinkedEntityPos, int posId);
+    void viewSystem(sf::RenderWindow& window, Entity& entity);
     void loadText(Entity& entity, auto& textComp);
     void textSystem(sf::RenderWindow& window, Entity& entity);
     void loadRectangle(Entity& entity, auto& shapeComp);
