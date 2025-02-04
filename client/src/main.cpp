@@ -23,8 +23,7 @@
 
 int main() {
 	try {
-		Game game;
-		game.gameManager();
+		Game::get().gameManager();
 	} catch (const std::exception &e) {
 		std::cerr << e.what() << std::endl;
 		return 84;

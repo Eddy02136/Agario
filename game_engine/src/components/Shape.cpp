@@ -98,6 +98,10 @@ float Shape::getRadius() const {
     return _radius;
 }
 
+void Shape::setRadius(float radius) {
+    this->_radius = radius;
+}
+
 /**
  * @brief Sets the shape of the rectangle.
  * @param rect The new rectangle shape.
