@@ -22,10 +22,14 @@ class Client {
         float getSpeed() const;
         float getSize();
         void setSize(float size); 
+
+        float getTextSize();
+        void setTextSize(float newSize);
     private:
         std::string _name = "";
         int _socket = -1;
         std::pair<float, float> _position;
         float _size;
+        float _textSize;
         float speed = 0.5;
 };

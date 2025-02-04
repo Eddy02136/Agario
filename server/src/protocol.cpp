@@ -46,7 +46,8 @@ void Protocol::create_player_callback(std::map<int, Client>& clients) {
                        lastClient->second.getName() + " " +
                        std::to_string(lastClient->second.getPosition().first) + " " +
                        std::to_string(lastClient->second.getPosition().second) + " " +
-                       std::to_string(lastClient->second.getSize()) + "\n";
+                       std::to_string(lastClient->second.getSize()) + " " +
+                       std::to_string(lastClient->second.getTextSize()) + "\n";
 
     for (auto &client : clients) {
         if (client.first != lastClient->first) {
@@ -55,7 +56,8 @@ void Protocol::create_player_callback(std::map<int, Client>& clients) {
                                client.second.getName() + " " +
                                std::to_string(client.second.getPosition().first) + " " +
                                std::to_string(client.second.getPosition().second) + " " +
-                               std::to_string(client.second.getSize()) + "\n";
+                               std::to_string(client.second.getSize()) + " " +
+                               std::to_string(client.second.getTextSize()) + "\n";
         }
     }
     data += std::to_string(OpCode::CREATE_MAP) + " " + std::to_string(Map::get().getId()) + "\n";
@@ -77,7 +79,8 @@ void Protocol::create_player_broadcast(std::map<int, Client>& clients) {
                                 lastClient->second.getName() + " " +
                                 std::to_string(pos.first) + " " +
                                 std::to_string(pos.second) + " " +
-                                std::to_string(size) + "\n";
+                                std::to_string(size) + " " + 
+                                std::to_string(lastClient->second.getTextSize()) + "\n";
     Server::get().sendToAllClientsExcept(lastClient->first, newPlayerData);
 }
 
@@ -96,13 +99,15 @@ void Protocol::check_food_collision(int clientId, const std::pair<float, float>&
 
         if (distance <= (clientRadius)) {
             client.setSize(client.getSize() + 1);
+            client.setTextSize(client.getSize() + 40);
             std::string data = std::to_string(OpCode::REMOVE_FOOD) + " " +
                                std::to_string(foodId) + " " +
                                std::to_string(Map::get().getId()) + " " +
                                std::to_string(foodPos.first) + " " +
                                std::to_string(foodPos.second) + " " +
                                std::to_string(clientId) + " " +
-                               std::to_string(client.getSize()) + "\n";
+                               std::to_string(client.getSize()) + " " + 
+                               std::to_string(client.getTextSize()) + "\n";
             Map::get().removeFood(foodId);
             Server::get().sendToAllClients(data);
         }
@@ -139,6 +144,7 @@ void Protocol::check_player_collision(std::map<int, Client>& clients) {
             if (distance <= (radius1 + radius2)) {
                 if (size1 > size2) {
                     player1.setSize(size1 + size2 / 2);
+                    player1.setTextSize(player1.getSize() + 40);
                     std::cout << "Player " << id1 << " ate Player " << id2 << std::endl;
 
                     std::string removeData = std::to_string(OpCode::REMOVE_PLAYER) + " " +
@@ -150,6 +156,7 @@ void Protocol::check_player_collision(std::map<int, Client>& clients) {
                     it2 = clients.erase(it2);
                 } else if (size2 > size1) {
                     player2.setSize(size2 + size1 / 2);
+                    player2.setTextSize(player2.getSize() + 40);
                     std::cout << "Player " << id2 << " ate Player " << id1 << std::endl;
 
                     std::string removeData = std::to_string(OpCode::REMOVE_PLAYER) + " " +
@@ -188,7 +195,7 @@ void Protocol::update_position(int id, std::map<int, Client>& clients, std::pair
 
     client->second.setPosition(clientPos);
     for (auto &client : clients) {
-        std::string data = std::to_string(OpCode::UPDATE_POSITION) + " " + std::to_string(id) + " " + std::to_string(clientPos.first) + " " + std::to_string(clientPos.second) + "\n";
+        std::string data = std::to_string(OpCode::UPDATE_POSITION) + " " + std::to_string(id) + " " + std::to_string(clientPos.first) + " " + std::to_string(clientPos.second) + " " + std::to_string(client.second.getSize()) + "\n";
         Server::get().sendToClient(client.second.getSocket(), data);
     }
 }

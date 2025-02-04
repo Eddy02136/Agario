@@ -121,39 +121,40 @@ void Network::handleSelect(std::pair<float, float> direction) {
                 if (line.compare(0, 1, "2") == 0) {
                     std::vector<std::string> args = splitString(line, ' ');
                     std::cout << "Callback" << std::endl;
-                    if (args.size() == 5) {
+                    if (args.size() == 7) {
                         int id = std::stoi(args[1]);
-                        std::pair<float, float> pos = {std::stof(args[2]), std::stof(args[3])};
-                        int size = std::stoi(args[4]);
-                        _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, size), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}));
                         std::string name = args[2];
                         std::pair<float, float> pos = {std::stof(args[3]), std::stof(args[4])};
+                        int size = std::stoi(args[5]);
+                        unsigned int textSize = std::stoi(args[6]);
                         sf::View view = sf::View(sf::FloatRect(0, 0, 1280, 720));
-                        _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, 30), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}), View(view));
-                        _entities[id + 1] = GameEngine::Entity(id + 1, Text(name, "font/Inter_Bold.ttf", 10), Position({{pos.first + 30, pos.second + 30}}), Link(id));
+                        _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, size), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}), View(view));
+                        _entities[id + 1] = GameEngine::Entity(id + 1, Text(name, "font/Inter_Bold.ttf", textSize), Position({{pos.first + size + 30, pos.second + size + 30}}), Link(id));
                     }
                 }
                 if (line.compare(0, 1, "3") == 0) {
                     std::cout << "Broadcast" << std::endl;
                     std::vector<std::string> args = splitString(line, ' ');
-                    if (args.size() == 5) {
+                    if (args.size() == 7) {
                         int id = std::stoi(args[1]);
-                        std::pair<float, float> pos = {std::stof(args[2]), std::stof(args[3])};
-                        int size = std::stoi(args[4]);
-                        _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, size), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}));
                         std::string name = args[2];
                         std::pair<float, float> pos = {std::stof(args[3]), std::stof(args[4])};
-                        _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, 30), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}));
-                        _entities[id + 1] = GameEngine::Entity(id + 1, Text(name, "font/Inter_Bold.ttf", 10), Position({{pos.first + 30, pos.second + 30}}), Link(id));
+                        int size = std::stoi(args[5]);
+                        unsigned int textSize = std::stoi(args[6]);
+                        _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, size), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}));
+                        _entities[id + 1] = GameEngine::Entity(id + 1, Text(name, "font/Inter_Bold.ttf", textSize), Position({{pos.first + size, pos.second + size}}), Link(id));
                     }
                 }
                 if (line.compare(0, 1, "4") == 0) {
                     std::cout << "Update Position" << std::endl;
                     std::vector<std::string> args = splitString(line, ' ');
-                    if (args.size() == 4) {
+                    if (args.size() == 5) {
                         int id = std::stoi(args[1]);
                         std::pair<float, float> pos = {std::stof(args[2]), std::stof(args[3])};
+                        int size = std::stoi(args[4]);
                         system.update(id, _entities, GameEngine::UpdateType::Position, pos, 0);
+                        std::pair<float, float> newPos = {pos.first + size, pos.second + size};
+                        system.update(id + 1, _entities, GameEngine::UpdateType::Position, newPos, 0);
                     }
                 }
                 if (line.compare(0, 1, "5") == 0) {
@@ -183,14 +184,16 @@ void Network::handleSelect(std::pair<float, float> direction) {
                 if (line.compare(0, 1, "7") == 0) {
                     std::cout << "Remove Food" << std::endl;
                     std::vector<std::string> args = splitString(line, ' ');
-                    if (args.size() == 7) {
+                    if (args.size() == 8) {
                         int foodId = std::stoi(args[1]);
                         int id = std::stoi(args[2]);
                         std::pair<float, float> pos = {std::stof(args[3]), std::stof(args[4])};
                         int clientId = std::stoi(args[5]);
                         float size = std::stoi(args[6]);
+                        unsigned int textSize = std::stoi(args[7]);
                         _entities[id].getComponent<Position>().removePosition(pos);
                         system.update(clientId, _entities, GameEngine::UpdateType::CircleRadius, size);
+                        system.update(clientId + 1, _entities, GameEngine::UpdateType::TextSize, textSize);
                     }
                 }
 
