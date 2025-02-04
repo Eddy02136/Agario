@@ -174,9 +174,9 @@ void Network::handleSelect(std::pair<float, float> direction) {
                         int id = std::stoi(args[2]);
                         std::pair<float, float> pos = {std::stof(args[3]), std::stof(args[4])};
                         int clientId = std::stoi(args[5]);
-                        int size = std::stoi(args[6]);
+                        float size = std::stoi(args[6]);
                         _entities[id].getComponent<Position>().removePosition(pos);
-                        _entities[clientId].getComponent<Shape>().setRadius(size);
+                        system.update(clientId, _entities, GameEngine::UpdateType::CircleRadius, size);
                     }
                 }
 

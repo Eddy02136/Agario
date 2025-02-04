@@ -53,7 +53,7 @@ void Protocol::create_player_callback(std::map<int, Client>& clients) {
                                std::to_string(client.first) + " " +
                                std::to_string(client.second.getPosition().first) + " " +
                                std::to_string(client.second.getPosition().second) + " " +
-                               std::to_string(lastClient->second.getSize()) + "\n";
+                               std::to_string(client.second.getSize()) + "\n";
         }
     }
     data += std::to_string(OpCode::CREATE_MAP) + " " + std::to_string(Map::get().getId()) + "\n";
@@ -91,7 +91,7 @@ void Protocol::check_food_collision(int clientId, const std::pair<float, float>&
         float distance = std::sqrt(dx * dx + dy * dy);
 
         if (distance <= 30.0f) {
-            client.setSize(client.getSize() + 10);
+            client.setSize(client.getSize() + 1);
             std::string data = std::to_string(OpCode::REMOVE_FOOD) + " " +
                                std::to_string(foodId) + " " +
                                std::to_string(Map::get().getId()) + " " +
@@ -99,6 +99,7 @@ void Protocol::check_food_collision(int clientId, const std::pair<float, float>&
                                std::to_string(foodPos.second) + " " +
                                std::to_string(clientId) + " " +
                                std::to_string(client.getSize()) + "\n";
+            Map::get().removeFood(foodId);
             Server::get().sendToClient(client.getSocket(), data);
         }
     }

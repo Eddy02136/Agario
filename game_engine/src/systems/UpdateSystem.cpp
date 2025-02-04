@@ -151,6 +151,26 @@ void GameEngine::System::updateTexture(Entity& entity, std::string& texture) {
 }
 
 /**
+ * @brief Updates the radius of a circle component of an entity.
+ *
+ * This function updates the radius of a circle component of an entity identified by its ID.
+ * It first checks if the entity has a Shape component and then updates the radius of the circle
+ * component of the entity.
+ *
+ * @param entity The entity to update.
+ * @param radius The new radius to set for the circle component.
+ */
+void GameEngine::System::updateCircleRadius(Entity& entity, const float radius) {
+    if (entity.hasComponent<Shape>()) {
+        auto& shapeComp = entity.getComponent<Shape>();
+        if (shapeComp.getShapeType() == Circle) {
+            entity.getComponent<Shape>().setRadius(radius);
+            shapeComp.getCircle().setRadius(radius);
+        }
+    }
+}
+
+/**
  * @brief Global update of an entity's component.
  *
  * This function updates any component of the entity.
@@ -193,6 +213,11 @@ void GameEngine::System::update(const int id, std::map<int, Entity>& entities,
     case UpdateType::Texture: {
         auto texture = std::any_cast<std::string>(value);
         updateTexture(entity, texture);
+        break;
+    }
+    case UpdateType::CircleRadius: {
+        auto radius = std::any_cast<float>(value);
+        updateCircleRadius(entity, radius);
         break;
     }
     default:

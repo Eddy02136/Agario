@@ -44,11 +44,11 @@ float Client::getSpeed() const {
     return this->speed;
 }
 
-int Client::getSize() {
+float Client::getSize() {
     return this->_size;
 }
 
-void Client::setSize(int size) {
+void Client::setSize(float size) {
     this->_size = size;
 }
 
