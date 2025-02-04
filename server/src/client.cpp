@@ -13,6 +13,7 @@ Client::Client(int socket) : _socket(socket) {
     float x = std::rand() % 1280;
     float y = std::rand() % 720;
     this->_position = std::make_pair(x, y);
+    this->_size = 30;
 }
 
 int Client::getSocket() const {
@@ -41,6 +42,14 @@ void Client::setSocket(int socket) {
 
 float Client::getSpeed() const {
     return this->speed;
+}
+
+int Client::getSize() {
+    return this->_size;
+}
+
+void Client::setSize(int size) {
+    this->_size = size;
 }
 
 Client::~Client() {}

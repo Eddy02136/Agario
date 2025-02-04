@@ -20,9 +20,12 @@ class Client {
         std::pair<float, float> getPosition() const;
         void setPosition(std::pair<float, float> pos);
         float getSpeed() const;
+        int getSize();
+        void setSize(int size); 
     private:
         std::string _name = "";
         int _socket = -1;
         std::pair<float, float> _position;
+        int _size;
         float speed = 0.5;
 };

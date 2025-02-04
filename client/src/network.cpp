@@ -116,19 +116,21 @@ void Network::handleSelect(std::pair<float, float> direction) {
                 if (line.compare(0, 1, "2") == 0) {
                     std::vector<std::string> args = splitString(line, ' ');
                     std::cout << "Callback" << std::endl;
-                    if (args.size() == 4) {
+                    if (args.size() == 5) {
                         int id = std::stoi(args[1]);
                         std::pair<float, float> pos = {std::stof(args[2]), std::stof(args[3])};
-                        _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, 30), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}));
+                        int size = std::stoi(args[4]);
+                        _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, size), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}));
                     }
                 }
                 if (line.compare(0, 1, "3") == 0) {
                     std::cout << "Broadcast" << std::endl;
                     std::vector<std::string> args = splitString(line, ' ');
-                    if (args.size() == 4) {
+                    if (args.size() == 5) {
                         int id = std::stoi(args[1]);
                         std::pair<float, float> pos = {std::stof(args[2]), std::stof(args[3])};
-                        _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, 30), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}));
+                        int size = std::stoi(args[4]);
+                        _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, size), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}));
                     }
                 }
                 if (line.compare(0, 1, "4") == 0) {
@@ -167,11 +169,14 @@ void Network::handleSelect(std::pair<float, float> direction) {
                 if (line.compare(0, 1, "7") == 0) {
                     std::cout << "Remove Food" << std::endl;
                     std::vector<std::string> args = splitString(line, ' ');
-                    if (args.size() == 5) {
+                    if (args.size() == 7) {
                         int foodId = std::stoi(args[1]);
                         int id = std::stoi(args[2]);
                         std::pair<float, float> pos = {std::stof(args[3]), std::stof(args[4])};
+                        int clientId = std::stoi(args[5]);
+                        int size = std::stoi(args[6]);
                         _entities[id].getComponent<Position>().removePosition(pos);
+                        _entities[clientId].getComponent<Shape>().setRadius(size);
                     }
                 }
 

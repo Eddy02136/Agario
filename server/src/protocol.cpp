@@ -44,13 +44,16 @@ void Protocol::create_player_callback(std::map<int, Client>& clients) {
     std::string data = std::to_string(OpCode::CREATE_PLAYER_CALLBACK) + " " +
                        std::to_string(lastClient->first) + " " +
                        std::to_string(lastClient->second.getPosition().first) + " " +
-                       std::to_string(lastClient->second.getPosition().second) + "\n";
+                       std::to_string(lastClient->second.getPosition().second) + " " +
+                       std::to_string(lastClient->second.getSize()) + "\n";
+
     for (auto &client : clients) {
         if (client.first != lastClient->first) {
             data += std::to_string(OpCode::CREATE_PLAYER_BROADCAST) + " " +
                                std::to_string(client.first) + " " +
                                std::to_string(client.second.getPosition().first) + " " +
-                               std::to_string(client.second.getPosition().second) + "\n";
+                               std::to_string(client.second.getPosition().second) + " " +
+                               std::to_string(lastClient->second.getSize()) + "\n";
         }
     }
     data += std::to_string(OpCode::CREATE_MAP) + " " + std::to_string(Map::get().getId()) + "\n";
@@ -66,14 +69,16 @@ void Protocol::create_player_broadcast(std::map<int, Client>& clients) {
 
     auto lastClient = --clients.end();
     std::pair<float, float> pos = lastClient->second.getPosition();
+    int size = lastClient->second.getSize();
     std::string newPlayerData = std::to_string(OpCode::CREATE_PLAYER_BROADCAST) + " " +
                                 std::to_string(lastClient->first) + " " +
                                 std::to_string(pos.first) + " " +
-                                std::to_string(pos.second) + "\n";
+                                std::to_string(pos.second) + " " +
+                                std::to_string(size) + "\n";
     Server::get().sendToAllClientsExcept(lastClient->first, newPlayerData);
 }
 
-void Protocol::check_food_collision(const std::pair<float, float>& clientPos, Client& client) {
+void Protocol::check_food_collision(int clientId, const std::pair<float, float>& clientPos, Client& client) {
     auto foodMap = Map::get().getMap();
 
     for (auto& food : foodMap) {
@@ -86,11 +91,14 @@ void Protocol::check_food_collision(const std::pair<float, float>& clientPos, Cl
         float distance = std::sqrt(dx * dx + dy * dy);
 
         if (distance <= 30.0f) {
+            client.setSize(client.getSize() + 10);
             std::string data = std::to_string(OpCode::REMOVE_FOOD) + " " +
                                std::to_string(foodId) + " " +
                                std::to_string(Map::get().getId()) + " " +
                                std::to_string(foodPos.first) + " " +
-                               std::to_string(foodPos.second) + " " + "\n";
+                               std::to_string(foodPos.second) + " " +
+                               std::to_string(clientId) + " " +
+                               std::to_string(client.getSize()) + "\n";
             Server::get().sendToClient(client.getSocket(), data);
         }
     }
@@ -109,7 +117,7 @@ void Protocol::update_position(int id, std::map<int, Client>& clients, std::pair
         return;
     }
 
-    check_food_collision(clientPos, client->second);
+    check_food_collision(id, clientPos, client->second);
 
     client->second.setPosition(clientPos);
     for (auto &client : clients) {
