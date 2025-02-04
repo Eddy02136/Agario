@@ -81,16 +81,17 @@ void Protocol::create_player_broadcast(std::map<int, Client>& clients) {
 void Protocol::check_food_collision(int clientId, const std::pair<float, float>& clientPos, Client& client) {
     auto foodMap = Map::get().getMap();
 
+    float clientRadius = client.getSize(); 
     for (auto& food : foodMap) {
         int foodId = food.first;
         const auto& foodPos = food.second;
 
 
-        float dx = clientPos.first + 20  - foodPos.first;
-        float dy = clientPos.second + 20 - foodPos.second;
+        float dx = (clientPos.first + clientRadius) - foodPos.first;
+        float dy = (clientPos.second + clientRadius) - foodPos.second;
         float distance = std::sqrt(dx * dx + dy * dy);
 
-        if (distance <= 30.0f) {
+        if (distance <= (clientRadius)) {
             client.setSize(client.getSize() + 1);
             std::string data = std::to_string(OpCode::REMOVE_FOOD) + " " +
                                std::to_string(foodId) + " " +
@@ -100,10 +101,71 @@ void Protocol::check_food_collision(int clientId, const std::pair<float, float>&
                                std::to_string(clientId) + " " +
                                std::to_string(client.getSize()) + "\n";
             Map::get().removeFood(foodId);
-            Server::get().sendToClient(client.getSocket(), data);
+            Server::get().sendToAllClients(data);
         }
     }
 }
+
+void Protocol::check_player_collision(std::map<int, Client>& clients) {
+    for (auto it1 = clients.begin(); it1 != clients.end(); ++it1) {
+        for (auto it2 = std::next(it1); it2 != clients.end(); ) {
+            int id1 = it1->first;
+            int id2 = it2->first;
+
+            auto& player1 = it1->second;
+            auto& player2 = it2->second;
+
+            float size1 = player1.getSize();
+            float size2 = player2.getSize();
+
+            float radius1 = size1 / 2.0f;
+            float radius2 = size2 / 2.0f;
+
+            std::pair<float, float> pos1 = player1.getPosition();
+            std::pair<float, float> pos2 = player2.getPosition();
+
+            float centerX1 = pos1.first + radius1;
+            float centerY1 = pos1.second + radius1;
+            float centerX2 = pos2.first + radius2;
+            float centerY2 = pos2.second + radius2;
+
+            float dx = centerX1 - centerX2;
+            float dy = centerY1 - centerY2;
+            float distance = std::sqrt(dx * dx + dy * dy);
+
+            if (distance <= (radius1 + radius2)) {
+                if (size1 > size2) {
+                    player1.setSize(size1 + size2 / 2);
+                    std::cout << "Player " << id1 << " ate Player " << id2 << std::endl;
+
+                    std::string removeData = std::to_string(OpCode::REMOVE_PLAYER) + " " +
+                                             std::to_string(id2) + " " +
+                                             std::to_string(pos2.first) + " " +
+                                             std::to_string(pos2.second) + "\n";
+
+                    Server::get().sendToAllClients(removeData);
+                    it2 = clients.erase(it2);
+                } else if (size2 > size1) {
+                    player2.setSize(size2 + size1 / 2);
+                    std::cout << "Player " << id2 << " ate Player " << id1 << std::endl;
+
+                    std::string removeData = std::to_string(OpCode::REMOVE_PLAYER) + " " +
+                                             std::to_string(id1) + " " +
+                                             std::to_string(pos1.first) + " " +
+                                             std::to_string(pos1.second) + "\n";                    
+                    Server::get().sendToAllClients(removeData);
+                    it1 = clients.erase(it1);
+                    break;
+                } else {
+                    ++it2;
+                }
+            } else {
+                ++it2;
+            }
+        }
+    }
+}
+
 
 void Protocol::update_position(int id, std::map<int, Client>& clients, std::pair<float, float> direction) {
     auto client = clients.find(id);
@@ -119,6 +181,7 @@ void Protocol::update_position(int id, std::map<int, Client>& clients, std::pair
     }
 
     check_food_collision(id, clientPos, client->second);
+    check_player_collision(clients);
 
     client->second.setPosition(clientPos);
     for (auto &client : clients) {

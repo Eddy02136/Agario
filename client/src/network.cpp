@@ -180,6 +180,17 @@ void Network::handleSelect(std::pair<float, float> direction) {
                     }
                 }
 
+                if (line.compare(0, 1, "8") == 0) {
+                    std::cout << "Remove Player" << std::endl;
+                    std::vector<std::string> args = splitString(line, ' ');
+                    if (args.size() == 4) {
+                        int playerId = std::stoi(args[1]);
+                        std::pair<float, float> pos = {std::stof(args[2]), std::stof(args[3])};
+                        _entities[playerId].removeComponent<Shape>();
+                    }
+
+                }
+
             }
         }
         if (FD_ISSET(_socket, &writefds)) {
