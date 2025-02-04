@@ -57,7 +57,9 @@ void Protocol::create_player_callback(std::map<int, Client>& clients) {
     for (const auto &food : map) {
         data += std::to_string(OpCode::ADD_FOOD) + " " + std::to_string(Map::get().getId()) + " " + std::to_string(food.second.first) + " " + std::to_string(food.second.second) + "\n";
     }
-    Server::get().sendToClient(lastClient->second.getSocket(), data);
+    std::lock_guard<std::mutex> lock(Server::get().getQueueMutex());
+    Server::get().getQueue().push({lastClient->second.getSocket(), Packet::dest::ONE, data});
+    Server::get().getCond().notify_one();
 }
 
 void Protocol::create_player_broadcast(std::map<int, Client>& clients) {
@@ -69,7 +71,9 @@ void Protocol::create_player_broadcast(std::map<int, Client>& clients) {
                                 std::to_string(lastClient->first) + " " +
                                 std::to_string(pos.first) + " " +
                                 std::to_string(pos.second) + "\n";
-    Server::get().sendToAllClientsExcept(lastClient->first, newPlayerData);
+    std::lock_guard<std::mutex> lock(Server::get().getQueueMutex());
+    Server::get().getQueue().push({lastClient->second.getSocket(), Packet::dest::OTHERS, newPlayerData});
+    Server::get().getCond().notify_one();
 }
 
 void Protocol::update_position(int id, std::map<int, Client>& clients, std::pair<float, float> direction) {
@@ -87,14 +91,16 @@ void Protocol::update_position(int id, std::map<int, Client>& clients, std::pair
     client->second.setPosition(clientPos);
     for (auto &client : clients) {
         std::string data = std::to_string(OpCode::UPDATE_POSITION) + " " + std::to_string(id) + " " + std::to_string(clientPos.first) + " " + std::to_string(clientPos.second) + "\n";
-        Server::get().sendToClient(client.second.getSocket(), data);
+        std::lock_guard<std::mutex> lock(Server::get().getQueueMutex());
+        Server::get().getQueue().push({client.second.getSocket(), Packet::dest::ONE, data});
+        Server::get().getCond().notify_one();
     }
 }
 
-bool Protocol::handle_message(int id, int clientSocket, std::map<int, Client>& clients) {
+bool Protocol::handle_message(int id, int clientSocket, std::string message) {
     try {
-        std::string data = Server::get().receiveFromClient(clientSocket);
-        if (data.empty()) {
+        std::map<int, Client>& clients = Server::get().getClients();
+        if (message.empty()) {
             return true;
         }
 
@@ -103,15 +109,7 @@ bool Protocol::handle_message(int id, int clientSocket, std::map<int, Client>& c
         float y = 0;
         std::string name;
         
-        std::vector<std::string> datas = splitString(data, '\n');
-        if (_buffer.length() > 0) {
-            datas[0] = _buffer + datas[0];
-            _buffer.clear();
-        }
-        if (data[data.length() - 1] != '\n') {
-            _buffer = datas[datas.size() - 1];
-            datas.pop_back();
-        }
+        std::vector<std::string> datas = splitString(message, '\n');
         for (const auto &line : datas) {
             if (line.empty()) continue;
 
