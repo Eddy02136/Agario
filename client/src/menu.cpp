@@ -42,7 +42,6 @@ GameEngine::Entity Menu::createEntityInput(int id, int fontSize, const std::vect
     return inputEntity;
 }
 
-
 void Menu::setupInput(const sf::Event& event) {
     if (event.type == sf::Event::TextEntered) {
         if (_isUsernameClicked) {

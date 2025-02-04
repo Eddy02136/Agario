@@ -8,6 +8,8 @@
 #include <components/Color.hpp>
 #include <components/Position.hpp>
 #include <components/View.hpp>
+#include <components/Text.hpp>
+#include <components/Link.hpp>
 #include "System.hpp"
 #include "network.hpp"
 
@@ -23,7 +25,7 @@ static std::vector<std::string> splitString(const std::string &data, const char 
     return result;
 }
 
-void Network::connectToServer() {
+void Network::connectToServer(std::string &name) {
     struct sockaddr_in server;
     _socket = -1;
 
@@ -37,7 +39,9 @@ void Network::connectToServer() {
     if (connect(_socket, (struct sockaddr *)&server, sizeof(server)) < 0) {
         throw std::runtime_error("Failed to connect to server");
     }
-    std::string name = "Guest";
+    if (name.empty()) {
+        name = "Guest";
+    }
     std::string data = "1 " + name + " " + "\n";
     //std::ostringstream out;
     //serialize(data, out, _key);
@@ -117,20 +121,24 @@ void Network::handleSelect(std::pair<float, float> direction) {
                 if (line.compare(0, 1, "2") == 0) {
                     std::vector<std::string> args = splitString(line, ' ');
                     std::cout << "Callback" << std::endl;
-                    if (args.size() == 4) {
+                    if (args.size() == 5) {
                         int id = std::stoi(args[1]);
-                        std::pair<float, float> pos = {std::stof(args[2]), std::stof(args[3])};
+                        std::string name = args[2];
+                        std::pair<float, float> pos = {std::stof(args[3]), std::stof(args[4])};
                         sf::View view = sf::View(sf::FloatRect(0, 0, 1280, 720));
                         _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, 30), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}), View(view));
+                        _entities[id + 1] = GameEngine::Entity(id + 1, Text(name, "font/Inter_Bold.ttf", 10), Position({{pos.first + 30, pos.second + 30}}), Link(id));
                     }
                 }
                 if (line.compare(0, 1, "3") == 0) {
                     std::cout << "Broadcast" << std::endl;
                     std::vector<std::string> args = splitString(line, ' ');
-                    if (args.size() == 4) {
+                    if (args.size() == 5) {
                         int id = std::stoi(args[1]);
-                        std::pair<float, float> pos = {std::stof(args[2]), std::stof(args[3])};
+                        std::string name = args[2];
+                        std::pair<float, float> pos = {std::stof(args[3]), std::stof(args[4])};
                         _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, 30), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}));
+                        _entities[id + 1] = GameEngine::Entity(id + 1, Text(name, "font/Inter_Bold.ttf", 10), Position({{pos.first + 30, pos.second + 30}}), Link(id));
                     }
                 }
                 if (line.compare(0, 1, "4") == 0) {

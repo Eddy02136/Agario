@@ -42,12 +42,14 @@ void Protocol::create_player_callback(std::map<int, Client>& clients) {
     auto lastClient = --clients.end();
     std::string data = std::to_string(OpCode::CREATE_PLAYER_CALLBACK) + " " +
                        std::to_string(lastClient->first) + " " +
+                       lastClient->second.getName() + " " +
                        std::to_string(lastClient->second.getPosition().first) + " " +
                        std::to_string(lastClient->second.getPosition().second) + "\n";
     for (auto &client : clients) {
         if (client.first != lastClient->first) {
             data += std::to_string(OpCode::CREATE_PLAYER_BROADCAST) + " " +
                                std::to_string(client.first) + " " +
+                               client.second.getName() + " " +
                                std::to_string(client.second.getPosition().first) + " " +
                                std::to_string(client.second.getPosition().second) + "\n";
         }
@@ -67,6 +69,7 @@ void Protocol::create_player_broadcast(std::map<int, Client>& clients) {
     std::pair<float, float> pos = lastClient->second.getPosition();
     std::string newPlayerData = std::to_string(OpCode::CREATE_PLAYER_BROADCAST) + " " +
                                 std::to_string(lastClient->first) + " " +
+                                lastClient->second.getName() + " " +
                                 std::to_string(pos.first) + " " +
                                 std::to_string(pos.second) + "\n";
     Server::get().sendToAllClientsExcept(lastClient->first, newPlayerData);
