@@ -43,6 +43,7 @@ void Protocol::create_player_callback(std::map<int, Client>& clients) {
     auto lastClient = --clients.end();
     std::string data = std::to_string(OpCode::CREATE_PLAYER_CALLBACK) + " " +
                        std::to_string(lastClient->first) + " " +
+                       lastClient->second.getName() + " " +
                        std::to_string(lastClient->second.getPosition().first) + " " +
                        std::to_string(lastClient->second.getPosition().second) + " " +
                        std::to_string(lastClient->second.getSize()) + "\n";
@@ -51,6 +52,7 @@ void Protocol::create_player_callback(std::map<int, Client>& clients) {
         if (client.first != lastClient->first) {
             data += std::to_string(OpCode::CREATE_PLAYER_BROADCAST) + " " +
                                std::to_string(client.first) + " " +
+                               client.second.getName() + " " +
                                std::to_string(client.second.getPosition().first) + " " +
                                std::to_string(client.second.getPosition().second) + " " +
                                std::to_string(client.second.getSize()) + "\n";
@@ -72,6 +74,7 @@ void Protocol::create_player_broadcast(std::map<int, Client>& clients) {
     int size = lastClient->second.getSize();
     std::string newPlayerData = std::to_string(OpCode::CREATE_PLAYER_BROADCAST) + " " +
                                 std::to_string(lastClient->first) + " " +
+                                lastClient->second.getName() + " " +
                                 std::to_string(pos.first) + " " +
                                 std::to_string(pos.second) + " " +
                                 std::to_string(size) + "\n";

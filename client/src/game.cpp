@@ -25,16 +25,11 @@ void Game::gameManager() {
     Network network;
     Menu menu;
     GameEngine::System system;
-    network.connectToServer();
-
     std::pair<float, float> playerPosition(640.0f, 360.0f);
     std::pair<float, float> direction(0.0f, 0.0f);
-
-    sf::View view(sf::FloatRect(0, 0, 1280, 720));
-    window.setView(view);
+    //window.setFramerateLimit(60);
 
     while (window.isOpen()) {
-        //network.handleSelect(direction);
         window.clear();
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -46,16 +41,15 @@ void Game::gameManager() {
         if (!Menu::get().getIsPlayed()) {
             Menu::get().displayMainMenu(window, system);
         } else {
+            if (!_isConnected) {
+                network.connectToServer(_username);
+                _isConnected = true;
+            }
             network.handleSelect(direction);
+            std::map<int, GameEngine::Entity> entities = network.getEntities();
+            direction = handlePlayerMovement(window, playerPosition);
+            system.render(window, entities);
         }
-
-        view.setCenter(playerPosition.first, playerPosition.second);
-        window.setView(view);
-
-        direction = handlePlayerMovement(window, playerPosition);
-
-        std::map<int, GameEngine::Entity> entities = network.getEntities();
-        system.render(window, entities);
         window.display();
     }
 }
