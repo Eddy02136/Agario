@@ -124,17 +124,10 @@ void Server::sendToClient(int client_socket, const std::string &msg) {
     this->serialize(msg, out, this->_key);
     std::string serialized = out.str();
     std::cout << "[Server] Sending message to client: " << serialized << std::endl;
-    const size_t MAX_SIZE = 1024;
-    size_t totalSent = 0;
-    size_t msgLength = serialized.size();
-    while (totalSent < msgLength) {
-        size_t chunkSize = std::min(MAX_SIZE, msgLength - totalSent);
-        ssize_t sent = send(client_socket, serialized.c_str() + totalSent, chunkSize, 0);
-        if (sent < 0) {
-            std::cerr << "[Server] Failed to send message to client." << std::endl;
-            return;
-        }
-        totalSent += sent;
+    ssize_t sent = send(client_socket, serialized.c_str(), serialized.size(), 0);
+    if (sent < 0) {
+        std::cerr << "[Server] Failed to send message to client." << std::endl;
+        return;
     }
 }
 
@@ -166,9 +159,9 @@ void Server::sendToAllClients(const std::string &msg) {
     }
 }
 
-void Server::sendToAllClientsExcept(int client_id, const std::string &msg) {
+void Server::sendToAllClientsExcept(int client_socket, const std::string &msg) {
     for (auto &client : this->_clients) {
-        if (client.first != client_id) {
+        if (client.second.getSocket() != client_socket) {
             sendToClient(client.second.getSocket(), msg);
         }
     }
@@ -208,6 +201,7 @@ void Server::receiveLoop() {
                     if (!message.empty()) {
                         Protocol::get().handle_message(client.first, clientSocket, message);
                     } else {
+                        std::cerr << "[Server] Client " << client.first << " disconnected." << std::endl;
                         close(clientSocket);
                         this->_clients.erase(client.first);
                         std::lock_guard<std::mutex> lockqueue(_queueMutex);
@@ -220,7 +214,6 @@ void Server::receiveLoop() {
                             }
                         }
                         _queue = std::move(tempQueue);
-                        std::cerr << "[Server] Client " << clientSocket << " disconnected." << std::endl;
                         break;
                     }
                 }

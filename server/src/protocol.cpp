@@ -113,7 +113,9 @@ void Protocol::check_food_collision(int clientId, const std::pair<float, float>&
                                std::to_string(client.getSize()) + " " + 
                                std::to_string(client.getTextSize()) + "\n";
             Map::get().removeFood(foodId);
-            Server::get().sendToAllClients(data);
+            std::lock_guard<std::mutex> lock(Server::get().getQueueMutex());
+            Server::get().getQueue().push({0, Packet::dest::ALL, data});
+            Server::get().getCond().notify_one();
         }
     }
 }
@@ -156,7 +158,9 @@ void Protocol::check_player_collision(std::map<int, Client>& clients) {
                                              std::to_string(pos2.first) + " " +
                                              std::to_string(pos2.second) + "\n";
 
-                    Server::get().sendToAllClients(removeData);
+                    std::lock_guard<std::mutex> lock(Server::get().getQueueMutex());
+                    Server::get().getQueue().push({0, Packet::dest::ALL, removeData});
+                    Server::get().getCond().notify_one();
                     it2 = clients.erase(it2);
                 } else if (size2 > size1) {
                     player2.setSize(size2 + size1 / 2);
@@ -167,7 +171,9 @@ void Protocol::check_player_collision(std::map<int, Client>& clients) {
                                              std::to_string(id1) + " " +
                                              std::to_string(pos1.first) + " " +
                                              std::to_string(pos1.second) + "\n";                    
-                    Server::get().sendToAllClients(removeData);
+                    std::lock_guard<std::mutex> lock(Server::get().getQueueMutex());
+                    Server::get().getQueue().push({0, Packet::dest::ALL, removeData});
+                    Server::get().getCond().notify_one();
                     it1 = clients.erase(it1);
                     break;
                 } else {
