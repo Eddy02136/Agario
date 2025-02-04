@@ -107,9 +107,11 @@ void Position::addPosition(const float x, const float y) {
  *
  * @param id The index of the position to be removed.
  */
-void Position::removePosition(const int id) {
-    this->_positions.erase(this->_positions.begin() + id);
+void Position::removePosition(std::pair<float, float> pos) {
+    this->_positions.erase(std::remove(this->_positions.begin(), this->_positions.end(), pos), this->_positions.end());
 }
+
+
 
 /**
  * @brief Display the Position component information.

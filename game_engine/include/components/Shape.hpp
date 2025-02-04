@@ -25,6 +25,7 @@ class Shape : public Component {
     bool getIsLoaded() const;
     void setIsLoaded(bool isLoad);
     float getRadius() const;
+    void setRadius(float radius);
     ShapeType getShapeType() const;
     std::pair<double, double> getSize() const;
     void setSize(const std::pair<double, double>& size);
