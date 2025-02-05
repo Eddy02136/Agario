@@ -126,6 +126,7 @@ std::string Server::receiveFromClient(int clientSocket) {
     char buffer[1024] = {0};
     std::string data;
     if (clientSocket < 0) {
+        std::cout << "client out" << std::endl;
         return "";
     }
     ssize_t bytesReceived = recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
@@ -192,6 +193,7 @@ void Server::handle_client(int id, int clientSocket) {
                         FD_CLR(clientSocket, &this->wfds);
                         close(clientSocket);
                         _clients.erase(client);
+                        std::cout << "test" << std::endl;
                         std::cout << "[Server] Client " << id << " disconnected." << std::endl;
                     }
                     break;

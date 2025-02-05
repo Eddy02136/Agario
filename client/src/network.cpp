@@ -2,6 +2,7 @@
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/ioctl.h>
 #include <unistd.h>
 #include <sstream>
 #include <components/Shape.hpp>
@@ -192,21 +193,23 @@ void Network::handleSelect(std::pair<float, float> direction) {
                         int clientId = std::stoi(args[5]);
                         float size = std::stoi(args[6]);
                         unsigned int textSize = std::stoi(args[7]);
-                        _entities[id].getComponent<Position>().removePosition(pos);
-                        system.update(clientId, _entities, GameEngine::UpdateType::CircleRadius, size);
-                        system.update(clientId + 1, _entities, GameEngine::UpdateType::TextSize, textSize);
-                        if (_entities[clientId].hasComponent<View>()) {
-                            auto &viewComp = _entities[clientId].getComponent<View>();
-                            std::pair<float, float> viewSize = viewComp.getSize();
-                            float playerSize = size;
-                            const std::pair<float, float> V0 = {1280.0f, 720.0f};
-                            const float S0 = 30.0f;
-                            const float alpha = 0.6f;
-                            std::pair<float, float> newSize = {
-                                V0.first * std::pow(playerSize / S0, alpha),
-                                V0.second * std::pow(playerSize / S0, alpha)
-                            };
-                            system.update(clientId, _entities, GameEngine::UpdateType::View, newSize);
+                        if (_entities.find(id) != _entities.end()) {
+                            _entities[id].getComponent<Position>().removePosition(pos);
+                            system.update(clientId, _entities, GameEngine::UpdateType::CircleRadius, size);
+                            system.update(clientId + 1, _entities, GameEngine::UpdateType::TextSize, textSize);
+                            if (_entities[clientId].hasComponent<View>()) {
+                                auto &viewComp = _entities[clientId].getComponent<View>();
+                                std::pair<float, float> viewSize = viewComp.getSize();
+                                float playerSize = size;
+                                const std::pair<float, float> V0 = {1280.0f, 720.0f};
+                                const float S0 = 30.0f;
+                                const float alpha = 0.6f;
+                                std::pair<float, float> newSize = {
+                                    V0.first * std::pow(playerSize / S0, alpha),
+                                    V0.second * std::pow(playerSize / S0, alpha)
+                                };
+                                system.update(clientId, _entities, GameEngine::UpdateType::View, newSize);
+                            }
                         }
                     }
                 }
@@ -232,19 +235,31 @@ void Network::handleSelect(std::pair<float, float> direction) {
 }
 
 std::string Network::receiveData() {
-    char buffer[1024] = {0};
-    std::string data;
-    ssize_t bytesReceived = recv(_socket, buffer, sizeof(buffer) - 1, 0);
+    int available = 0;
+    if (ioctl(_socket, FIONREAD, &available) < 0) {
+        throw std::runtime_error("Failed to check available data");
+    }
+
+    if (available <= 0) {
+        return "";
+    }
+
+    std::vector<char> buffer(available + 1, 0);
+    ssize_t bytesReceived = recv(_socket, buffer.data(), available, 0);
+    
     if (bytesReceived < 0) {
         throw std::runtime_error("Failed to receive data");
     }
-    buffer[bytesReceived] = '\0';
+
     std::cout << "Bytes received: " << bytesReceived << std::endl;
-    data = std::string(buffer, bytesReceived);
+
+    std::string data(buffer.begin(), buffer.begin() + bytesReceived);
     //std::istringstream in(data);
-    //std::cout << "Received: " << data << std::endl;
+    
+    std::cout << "Received: " << data << std::endl;
     //data = deserialize(in, _key);
     std::cout << "Deserialized: " << data << std::endl;
+    
     return data;
 }
 
