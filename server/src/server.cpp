@@ -2,6 +2,8 @@
 #include <iostream>
 #include <config.hpp>
 #include <sys/select.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
 #include <sstream>
 #include <unistd.h>
 #include <vector>
@@ -104,7 +106,7 @@ std::string Server::deserialize(std::istream &in, char key) {
 }
 
 void Server::sendToClient(int client_socket, const std::string &msg) {
-    const size_t MAX_SIZE = 30000;
+    const size_t MAX_SIZE = 3000;
     size_t totalSent = 0;
     size_t msgLength = msg.size();
     
@@ -120,30 +122,38 @@ void Server::sendToClient(int client_socket, const std::string &msg) {
         }
         
         totalSent += chunkSize;
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     
     std::cout << "[Server] Message fully sent to client." << std::endl;
 }
 
 std::string Server::receiveFromClient(int clientSocket) {
-    char buffer[1024] = {0};
-    std::string data;
-    if (clientSocket < 0) {
-        std::cout << "client out" << std::endl;
+    int available = 0;
+    if (ioctl(clientSocket, FIONREAD, &available) < 0) {
+        throw std::runtime_error("Failed to check available data");
+    }
+
+    if (available <= 0) {
         return "";
     }
-    ssize_t bytesReceived = recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
+
+    std::vector<char> buffer(available + 1, 0);
+    ssize_t bytesReceived = recv(clientSocket, buffer.data(), available, 0);
+    
     if (bytesReceived < 0) {
         throw std::runtime_error("Failed to receive data");
-    } else if (bytesReceived == 0) {
-        std::cerr << "[Server] Client " << clientSocket << " disconnected." << std::endl;
-        return "";
     }
-    buffer[bytesReceived] = '\0';
-    data = std::string(buffer, bytesReceived);
+
+    std::cout << "Bytes received: " << bytesReceived << std::endl;
+
+    std::string data(buffer.begin(), buffer.begin() + bytesReceived);
     std::istringstream in(data);
-    data = deserialize(in, _key);
+    
     std::cout << "Received: " << data << std::endl;
+    data = deserialize(in, _key);
+    std::cout << "Deserialized: " << data << std::endl;
+    
     return data;
 }
 
