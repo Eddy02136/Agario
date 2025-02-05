@@ -80,13 +80,15 @@ void Server::manage_file_descriptors() {
 }
 
 void Server::serialize(const std::string &str, std::ostream &out, char key) {
-    size_t size = str.size();
-    out.write(reinterpret_cast<const char *>(&size), sizeof(size));
+    size_t size = str.size();  // Taille de la donnée
+    out.write(reinterpret_cast<const char *>(&size), sizeof(size));  // Écriture de la taille en binaire
+    
+    // On écrit les données sous forme binaire, après les avoir chiffrées avec la clé XOR
     std::vector<char> buffer(str.begin(), str.end());
     for (size_t i = 0; i < size; i++) {
-        buffer[i] ^= key;
+        buffer[i] ^= key;  // Application de la clé XOR pour chiffrer
     }
-    out.write(buffer.data(), static_cast<std::streamsize>(size));
+    out.write(buffer.data(), static_cast<std::streamsize>(size));  // Écriture des données
 }
 
 std::string Server::deserialize(std::istream &in, char key) {
@@ -115,6 +117,7 @@ void Server::sendToClient(int client_socket, const std::string &msg) {
         std::ostringstream out;
         this->serialize(msg.substr(totalSent, chunkSize), out, this->_key);
         std::string serialized = out.str();
+        
         ssize_t sent = send(client_socket, serialized.c_str(), serialized.size(), 0);
         if (sent < 0) {
             std::cerr << "[Server] Failed to send message to client." << std::endl;

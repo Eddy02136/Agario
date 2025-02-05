@@ -57,30 +57,27 @@ std::map<int, GameEngine::Entity> Network::getEntities() const {
 void Network::serialize (
     const std::string &str, std::ostream &out, char key)
 {
-    size_t size = str.size();
-    out.write(reinterpret_cast<const char *>(&size), sizeof(size));
-
+    size_t size = str.size();  // Taille de la donnée
+    out.write(reinterpret_cast<const char *>(&size), sizeof(size));  // Écriture de la taille en binaire
+    
+    // On écrit les données sous forme binaire, après les avoir chiffrées avec la clé XOR
     std::vector<char> buffer(str.begin(), str.end());
     for (size_t i = 0; i < size; i++) {
-        buffer.data()[i] ^= key;
+        buffer[i] ^= key;  // Application de la clé XOR pour chiffrer
     }
-    out.write(buffer.data(), static_cast<std::streamsize>(size));
+    out.write(buffer.data(), static_cast<std::streamsize>(size));  // Écriture des données
 }
 
 std::string Network::deserialize(std::istream &in, char key) {
     size_t size = 0;
     in.clear();
-
     if (!in.read(reinterpret_cast<char *>(&size), sizeof(size))) {
         return "";
     }
-
-    if (size > static_cast<size_t>(in.rdbuf()->in_avail())) {
+    std::vector<char> buffer(size);
+    if (!in.read(buffer.data(), static_cast<std::streamsize>(size))) {
         return "";
     }
-    std::vector<char> buffer(size);
-    in.read(buffer.data(), static_cast<std::streamsize>(size));
-    std::cout << "Buffer: " << std::string(buffer.begin(), buffer.end()) << std::endl;
     for (size_t i = 0; i < size; i++) {
         buffer[i] ^= key;
     }
