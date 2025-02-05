@@ -45,9 +45,9 @@ void Network::connectToServer(std::string &name) {
         name = "Guest";
     }
     std::string data = "1 " + name + " " + "\n";
-    //std::ostringstream out;
-    //serialize(data, out, _key);
-    send(_socket, data.c_str(), data.size(), 0);
+    std::ostringstream out;
+    serialize(data, out, _key);
+    send(_socket, out.str().c_str(), out.str().size(), 0);
 }
 
 std::map<int, GameEngine::Entity> Network::getEntities() const {
@@ -227,9 +227,9 @@ void Network::handleSelect(std::pair<float, float> direction) {
         }
         if (FD_ISSET(_socket, &writefds)) {
             std::string data = "4 " + std::to_string(direction.first) + " " + std::to_string(direction.second) + "\n";
-            //std::ostringstream out;
-            //serialize(data, out, _key);
-            send(_socket, data.c_str(), data.size(), 0);
+            std::ostringstream out;
+            serialize(data, out, _key);
+            send(_socket, out.str().c_str(), out.str().size(), 0);
         }
     }
 }
@@ -254,10 +254,10 @@ std::string Network::receiveData() {
     std::cout << "Bytes received: " << bytesReceived << std::endl;
 
     std::string data(buffer.begin(), buffer.begin() + bytesReceived);
-    //std::istringstream in(data);
+    std::istringstream in(data);
     
     std::cout << "Received: " << data << std::endl;
-    //data = deserialize(in, _key);
+    data = deserialize(in, _key);
     std::cout << "Deserialized: " << data << std::endl;
     
     return data;
