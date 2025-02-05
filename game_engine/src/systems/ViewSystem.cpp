@@ -18,6 +18,9 @@ void GameEngine::System::viewSystem(sf::RenderWindow& window,
         entity.getComponent<View>().setCenter({
             entity.getComponent<Position>().getPositions()[0].first, 
             entity.getComponent<Position>().getPositions()[0].second});
-            window.setView(entity.getComponent<View>().getView());
+        entity.getComponent<View>().setSize({
+            entity.getComponent<View>().getSize().first, 
+            entity.getComponent<View>().getSize().second});
+        window.setView(entity.getComponent<View>().getView());
     }
 }

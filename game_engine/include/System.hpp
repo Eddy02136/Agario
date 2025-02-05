@@ -15,7 +15,7 @@
 
 namespace GameEngine {
 
-enum class UpdateType { Position, Text, TextSize, TextFont, Texture, CircleRadius };
+enum class UpdateType { Position, Text, TextSize, TextFont, Texture, CircleRadius, View };
 
 class System {
   public:
@@ -42,6 +42,7 @@ class System {
     void updateTextFont(Entity& entity, const std::string& font);
     void updateTexture(Entity& entity, std::string& texture);
     void updateCircleRadius(Entity& entity, const float radius);
+    void updateView(Entity& entity, const std::pair<float, float>& view);
     void loadSprite(Entity& entity, auto& spriteComp, auto& textureComp);
     void spriteSystem(sf::RenderWindow& window, Entity& entity);
     void linkSystem(int id, std::map<int, Entity>& entities,
