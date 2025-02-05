@@ -14,6 +14,7 @@
 #include <components/Shape.hpp>
 #include <components/Sprite.hpp>
 #include <components/Text.hpp>
+#include <components/View.hpp>
 #include <iostream>
 #include "System.hpp"
 
@@ -171,6 +172,23 @@ void GameEngine::System::updateCircleRadius(Entity& entity, const float radius) 
 }
 
 /**
+ * @brief Updates the view of an entity within the game engine.
+ *
+ * This function updates the view of an entity identified by its ID.
+ * It first checks if the entity has a View component and then updates the view
+ * of the entity.
+ *
+ * @param entity The entity to update.
+ * @param view The new view to set for the entity.
+ */
+void GameEngine::System::updateView(Entity& entity, const std::pair<float, float>& view) {
+    if (entity.hasComponent<View>()) {
+        auto& viewComp = entity.getComponent<View>();
+        viewComp.setSize({view.first, view.second});
+    }
+}
+
+/**
  * @brief Global update of an entity's component.
  *
  * This function updates any component of the entity.
@@ -218,6 +236,11 @@ void GameEngine::System::update(const int id, std::map<int, Entity>& entities,
     case UpdateType::CircleRadius: {
         auto radius = std::any_cast<float>(value);
         updateCircleRadius(entity, radius);
+        break;
+    }
+    case UpdateType::View: {
+        auto view = std::any_cast<std::pair<float, float>>(value);
+        updateView(entity, view);
         break;
     }
     default:

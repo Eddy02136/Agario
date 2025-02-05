@@ -10,6 +10,7 @@
 #include <components/View.hpp>
 #include <components/Text.hpp>
 #include <components/Link.hpp>
+#include <cmath>
 #include "System.hpp"
 #include "network.hpp"
 
@@ -128,7 +129,7 @@ void Network::handleSelect(std::pair<float, float> direction) {
                         int size = std::stoi(args[5]);
                         unsigned int textSize = std::stoi(args[6]);
                         sf::View view = sf::View(sf::FloatRect(0, 0, 1280, 720));
-                        _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, size), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}), View(view));
+                        _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, size), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}), View(view, {1280, 720}));
                         _entities[id + 1] = GameEngine::Entity(id + 1, Text(name, "font/Inter_Bold.ttf", textSize), Position({{pos.first + size + 30, pos.second + size + 30}}), Link(id));
                     }
                 }
@@ -194,6 +195,19 @@ void Network::handleSelect(std::pair<float, float> direction) {
                         _entities[id].getComponent<Position>().removePosition(pos);
                         system.update(clientId, _entities, GameEngine::UpdateType::CircleRadius, size);
                         system.update(clientId + 1, _entities, GameEngine::UpdateType::TextSize, textSize);
+                        if (_entities[clientId].hasComponent<View>()) {
+                            auto &viewComp = _entities[clientId].getComponent<View>();
+                            std::pair<float, float> viewSize = viewComp.getSize();
+                            float playerSize = size;
+                            const std::pair<float, float> V0 = {1280.0f, 720.0f};
+                            const float S0 = 30.0f;
+                            const float alpha = 0.6f;
+                            std::pair<float, float> newSize = {
+                                V0.first * std::pow(playerSize / S0, alpha),
+                                V0.second * std::pow(playerSize / S0, alpha)
+                            };
+                            system.update(clientId, _entities, GameEngine::UpdateType::View, newSize);
+                        }
                     }
                 }
 
@@ -205,9 +219,7 @@ void Network::handleSelect(std::pair<float, float> direction) {
                         std::pair<float, float> pos = {std::stof(args[2]), std::stof(args[3])};
                         _entities[playerId].removeComponent<Shape>();
                     }
-
                 }
-
             }
         }
         if (FD_ISSET(_socket, &writefds)) {

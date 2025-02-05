@@ -10,8 +10,9 @@
 #include <iostream>
 #include "components/View.hpp"
 
-View::View(sf::View &view) {
+View::View(sf::View &view, std::pair<float, float> size) {
     this->view = view;
+    this->_size = size;
 }
 
 void View::setCenter(const sf::Vector2f &position)
@@ -19,7 +20,23 @@ void View::setCenter(const sf::Vector2f &position)
     this->view.setCenter(position);
 }
 
-const sf::View &View::getView() const
+void View::setSize(const sf::Vector2f &size)
+{
+    this->_size = {size.x, size.y};
+    this->view.setSize(size);
+}
+
+std::pair<float, float> View::getSize() const
+{
+    return this->_size;
+}
+
+std::pair<float, float> View::getCenter() const
+{
+    return {this->view.getCenter().x, this->view.getCenter().y};
+}
+
+sf::View &View::getView()
 {
     return this->view;
 }
