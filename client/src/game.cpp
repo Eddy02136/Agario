@@ -59,8 +59,10 @@ void Game::gameManager() {
             if (!_isConnected) {
                 network.connectToServer(_username);
                 _isConnected = true;
+                if (_networkThread.joinable()) {
+                    _networkThread.join();
+                }
                 _networkThread = std::thread(&Game::networkThread, this, std::ref(network));
-                _networkThread.detach();
             }
             std::map<int, GameEngine::Entity> entities = network.getEntities();
             _direction = handlePlayerMovement(window, playerPosition);
