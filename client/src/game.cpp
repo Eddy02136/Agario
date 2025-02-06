@@ -1,7 +1,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <cmath>
-#include "network.hpp"
+#include <thread>
 #include "System.hpp"
 #include "game.hpp"
 #include "menu.hpp"
@@ -20,6 +20,16 @@ static std::pair<float, float> normalize(const std::pair<float, float>& vector) 
     return std::pair<float, float>(0, 0);
 }
 
+void Game::networkThread(Network &network)
+{
+    while (true) {
+        network.handleSelect(_direction);
+        if (!_isConnected) {
+            break;
+        }
+    }
+}
+
 void Game::gameManager() {
     sf::RenderWindow window(sf::VideoMode(1280, 720), "Agario");
     Network network;
@@ -33,8 +43,10 @@ void Game::gameManager() {
         window.clear();
         sf::Event event;
         while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed)
+            if (event.type == sf::Event::Closed) {
                 window.close();
+                _isConnected = false;
+            }
             Menu::get().setupInput(event);
         }
         
@@ -44,13 +56,16 @@ void Game::gameManager() {
             if (!_isConnected) {
                 network.connectToServer(_username);
                 _isConnected = true;
+                _networkThread = std::thread(&Game::networkThread, this, std::ref(network));
             }
-            network.handleSelect(direction);
             std::map<int, GameEngine::Entity> entities = network.getEntities();
-            direction = handlePlayerMovement(window, playerPosition);
+            _direction = handlePlayerMovement(window, playerPosition);
             system.render(window, entities);
         }
         window.display();
+    }
+    if (_networkThread.joinable()) {
+        _networkThread.join();
     }
 }
 
@@ -63,7 +78,6 @@ std::pair<float, float> Game::handlePlayerMovement(sf::RenderWindow& window, std
     std::pair<float, float> normalizedDirection = normalize(direction);
     return normalizedDirection;
 }
-
 
 std::string Game::getUsername() {
     return this->_username;

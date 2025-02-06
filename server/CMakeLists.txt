@@ -9,4 +9,4 @@ file(GLOB_RECURSE HEADERS include/*.hpp include/**/*.hpp)
 
 add_executable(Server ${SOURCES} ${HEADERS})
 
-target_include_directories(Server PUBLIC include)
+target_include_directories(Server PUBLIC include ../external/smart-buffer-cpp/include)

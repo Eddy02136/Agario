@@ -31,5 +31,5 @@ class Client {
         std::pair<float, float> _position;
         float _size;
         float _textSize;
-        float speed = 0.5;
+        float speed = 0.04;
 };
