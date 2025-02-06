@@ -235,7 +235,7 @@ void Network::handleSelect(std::pair<float, float> direction) {
                         int playerId = std::stoi(args[1]);
                         std::pair<float, float> pos = {std::stof(args[2]), std::stof(args[3])};
                         _entities[playerId].removeComponent<Shape>();
-                        _entities[playerId + 1].removeComponent<Text>();
+                        //_entities[playerId + 1].removeComponent<Text>();
                     }
                 }
             }
