@@ -85,7 +85,7 @@ void Server::sendToClient(int client_socket, SmartBuffer &smartBuffer) {
     std::memcpy(data.data(), &size, sizeof(uint32_t));
     std::memcpy(data.data() + sizeof(uint32_t), smartBuffer.getBuffer(), size);
     if (send(client_socket, data.data(), data.size(), 0) < 0) {
-        std::cerr << "[Server] Failed to send data to client." << std::endl;
+        throw std::runtime_error("Failed to send data to client.");
     }
 }
 

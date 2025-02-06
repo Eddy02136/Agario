@@ -20,14 +20,13 @@ static std::pair<float, float> normalize(const std::pair<float, float>& vector) 
     return std::pair<float, float>(0, 0);
 }
 
+std::atomic<bool> _isConnected{false};
+
 void Game::networkThread(Network &network)
 {
     try {
-        while (true) {
+        while (_isConnected) {
             network.handleSelect(_direction);
-            if (!_isConnected) {
-                break;
-            }
         }
     } catch (const std::exception &e) {
         std::cerr << e.what() << std::endl;
@@ -61,15 +60,13 @@ void Game::gameManager() {
                 network.connectToServer(_username);
                 _isConnected = true;
                 _networkThread = std::thread(&Game::networkThread, this, std::ref(network));
+                _networkThread.detach();
             }
             std::map<int, GameEngine::Entity> entities = network.getEntities();
             _direction = handlePlayerMovement(window, playerPosition);
             system.render(window, entities);
         }
         window.display();
-    }
-    if (_networkThread.joinable()) {
-        _networkThread.join();
     }
 }
 

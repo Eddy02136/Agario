@@ -189,16 +189,22 @@ void Network::handleSelect(std::pair<float, float> direction) {
         if (FD_ISSET(_socket, &writefds)) {
             smartBuffer.reset();
             smartBuffer << static_cast<int16_t>(4) << static_cast<float_t>(direction.first) << static_cast<float_t>(direction.second);
-            send(_socket, smartBuffer.getBuffer(), smartBuffer.getSize(), 0);
+            if (send(_socket, smartBuffer.getBuffer(), smartBuffer.getSize(), 0) <= 0) {
+                throw std::runtime_error("Failed to send data");
+            }
         }
     }
 }
 
 void Network::receiveData(SmartBuffer &smartBuffer) {
     uint32_t size;
-    recv(_socket, &size, sizeof(uint32_t), 0);
+    if (recv(_socket, &size, sizeof(uint32_t), 0) <= 0) {
+        throw std::runtime_error("Failed to receive size");
+    }
     std::vector<uint8_t> data(size);
-    recv(_socket, data.data(), size, 0);
+    if (recv(_socket, data.data(), size, 0) <= 0) {
+        throw std::runtime_error("Failed to receive data");
+    }
     smartBuffer.reset();
     smartBuffer.inject(data.data(), size);
 }
