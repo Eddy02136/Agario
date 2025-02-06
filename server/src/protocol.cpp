@@ -1,3 +1,10 @@
+/*
+** EPITECH PROJECT, 2025
+** Agario
+** File description:
+** protocol
+*/
+
 #include <iostream>
 #include "config.hpp"
 #include "protocol.hpp"
@@ -99,7 +106,7 @@ void Protocol::check_food_collision(int clientId, const std::pair<float, float>&
 
         if (distance <= (clientRadius)) {
             client.setSize(client.getSize() + 1);
-            client.setTextSize(client.getSize() + 40);
+            client.setTextSize(client.getSize());
             std::string data = std::to_string(OpCode::REMOVE_FOOD) + " " +
                                std::to_string(foodId) + " " +
                                std::to_string(Map::get().getId()) + " " +
@@ -144,7 +151,7 @@ void Protocol::check_player_collision(std::map<int, Client>& clients) {
             if (distance <= (radius1 + radius2)) {
                 if (size1 > size2) {
                     player1.setSize(size1 + size2 / 2);
-                    player1.setTextSize(player1.getSize() + 40);
+                    player1.setTextSize(player1.getSize());
                     std::cout << "Player " << id1 << " ate Player " << id2 << std::endl;
 
                     std::string removeData = std::to_string(OpCode::REMOVE_PLAYER) + " " +
@@ -156,7 +163,7 @@ void Protocol::check_player_collision(std::map<int, Client>& clients) {
                     it2 = clients.erase(it2);
                 } else if (size2 > size1) {
                     player2.setSize(size2 + size1 / 2);
-                    player2.setTextSize(player2.getSize() + 40);
+                    player2.setTextSize(player2.getSize());
                     std::cout << "Player " << id2 << " ate Player " << id1 << std::endl;
 
                     std::string removeData = std::to_string(OpCode::REMOVE_PLAYER) + " " +
