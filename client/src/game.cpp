@@ -22,11 +22,15 @@ static std::pair<float, float> normalize(const std::pair<float, float>& vector) 
 
 void Game::networkThread(Network &network)
 {
-    while (true) {
-        network.handleSelect(_direction);
-        if (!_isConnected) {
-            break;
+    try {
+        while (true) {
+            network.handleSelect(_direction);
+            if (!_isConnected) {
+                break;
+            }
         }
+    } catch (const std::exception &e) {
+        std::cerr << e.what() << std::endl;
     }
 }
 

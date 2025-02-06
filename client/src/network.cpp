@@ -185,54 +185,6 @@ void Network::handleSelect(std::pair<float, float> direction) {
                     std::cout << "[Network] Unknown operation code: " << opCode << std::endl;
                     break;
             }
-            /*
-                if (line.compare(0, 1, "7") == 0) {
-                    std::cout << "Remove Food" << std::endl;
-                    std::vector<std::string> args = splitString(line, ' ');
-                    if (args.size() == 8) {
-                        int foodId = std::stoi(args[1]);
-                        int id = std::stoi(args[2]);
-                        std::pair<float, float> pos = {std::stof(args[3]), std::stof(args[4])};
-                        int clientId = std::stoi(args[5]);
-                        float size = std::stoi(args[6]);
-                        unsigned int textSize = std::stoi(args[7]);
-                        if (_entities.find(id) != _entities.end()) {
-                            _entities[id].getComponent<Position>().removePosition(pos);
-                            system.update(clientId, _entities, GameEngine::UpdateType::CircleRadius, size);
-                            system.update(clientId + 1, _entities, GameEngine::UpdateType::TextSize, textSize);
-                            if (_entities[clientId].hasComponent<View>()) {
-                                auto &viewComp = _entities[clientId].getComponent<View>();
-                                std::pair<float, float> viewSize = viewComp.getSize();
-                                float playerSize = size;
-                                const std::pair<float, float> V0 = {1280.0f, 720.0f};
-                                const float S0 = 30.0f;
-                                const float alpha = 0.6f;
-                                std::pair<float, float> newSize = {
-                                    V0.first * std::pow(playerSize / S0, alpha),
-                                    V0.second * std::pow(playerSize / S0, alpha)
-                                };
-                                system.update(clientId, _entities, GameEngine::UpdateType::View, newSize);
-                            }
-                        }
-                    }
-                }
-
-                if (line.compare(0, 1, "8") == 0) {
-                    std::cout << "Remove Player" << std::endl;
-                    std::vector<std::string> args = splitString(line, ' ');
-                    if (args.size() == 4) {
-                        int playerId = std::stoi(args[1]);
-                        std::pair<float, float> pos = {std::stof(args[2]), std::stof(args[3])};
-                        _entities[playerId].removeComponent<Shape>();
-                    }
-                }
-            }
-        }
-        if (FD_ISSET(_socket, &writefds)) {
-            std::string data = "4 " + std::to_string(direction.first) + " " + std::to_string(direction.second) + "\n";
-            send(_socket, data.c_str(), data.size(), 0);
-        }
-        */
         }
         if (FD_ISSET(_socket, &writefds)) {
             smartBuffer.reset();
