@@ -131,7 +131,7 @@ void Network::handleSelect(std::pair<float, float> direction) {
                         unsigned int textSize = std::stoi(args[6]);
                         sf::View view = sf::View(sf::FloatRect(0, 0, 1280, 720));
                         _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, size), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}), View(view, {1280, 720}));
-                        _entities[id + 1] = GameEngine::Entity(id + 1, Text(name, "font/Inter_Bold.ttf", textSize), Position({{pos.first + size + 30, pos.second + size + 30}}));
+                        _entities[id + 1] = GameEngine::Entity(id + 1, Text(name, "font/Inter_Bold.ttf", 30), Position({{pos.first + size, pos.second + size}}));
                     }
                 }
                 if (line.compare(0, 1, "3") == 0) {
@@ -144,7 +144,7 @@ void Network::handleSelect(std::pair<float, float> direction) {
                         int size = std::stoi(args[5]);
                         unsigned int textSize = std::stoi(args[6]);
                         _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, size), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}));
-                        _entities[id + 1] = GameEngine::Entity(id + 1, Text(name, "font/Inter_Bold.ttf", textSize), Position({{pos.first + size, pos.second + size}}));
+                        _entities[id + 1] = GameEngine::Entity(id + 1, Text(name, "font/Inter_Bold.ttf", 30), Position({{pos.first + size, pos.second + size}}));
                     }
                 }
                 if (line.compare(0, 1, "4") == 0) {
@@ -156,21 +156,19 @@ void Network::handleSelect(std::pair<float, float> direction) {
                         int size = std::stoi(args[4]);
                         system.update(id, _entities, GameEngine::UpdateType::Position, pos, 0);
                         if (_entities.find(id) != _entities.end() && _entities[id].hasComponent<Shape>()) {
-                            int playerSize = size;
-                            float radius = static_cast<float>(playerSize);
+                            std::pair<double, double> playerSize = _entities[id].getComponent<Shape>().getSize();
+                            //float radius = static_cast<float>(playerSize.first);
 
                             if (_entities[id].hasComponent<Position>() && _entities[id + 1].hasComponent<Text>()) {
                                 std::pair<float, float> pos = _entities[id].getComponent<Position>().getPositions().front(); 
                                 std::pair<float, float> newPos = {
-                                    pos.first + radius,
-                                    pos.second + radius
+                                    pos.first + static_cast<float>(playerSize.first),
+                                    pos.second + static_cast<float>(playerSize.second)
                                 };
 
                                 system.update(id + 1, _entities, GameEngine::UpdateType::Position, newPos, 0);
                             }
                         }
-
-
                     }
                 }
                 if (line.compare(0, 1, "5") == 0) {
