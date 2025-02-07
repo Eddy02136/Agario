@@ -38,7 +38,7 @@ Position::~Position() {}
  *
  * @return A vector of pairs representing the x and y coordinates.
  */
-std::vector<std::pair<float, float>> Position::getPositions() const {
+const std::vector<std::pair<float, float>>& Position::getPositions() const {
     return _positions;
 }
 

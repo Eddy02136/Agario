@@ -44,60 +44,125 @@ void Network::connectToServer(std::string &name) {
     if (name.empty()) {
         name = "Guest";
     }
-    std::string data = "1 " + name + " " + "\n";
-    //std::ostringstream out;
-    //serialize(data, out, _key);
-    send(_socket, data.c_str(), data.size(), 0);
+    SmartBuffer smartBuffer;
+    smartBuffer << static_cast<int16_t>(1);
+    smartBuffer << name;
+    if (send(_socket, smartBuffer.getBuffer(), smartBuffer.getSize(), 0) < 0) {
+        throw std::runtime_error("Failed to send data");
+    }
 }
 
 std::map<int, GameEngine::Entity> Network::getEntities() const {
     return _entities;
 }
 
-void Network::serialize (
-    const std::string &str, std::ostream &out, char key)
-{
-    size_t size = str.size();
-    out.write(reinterpret_cast<const char *>(&size), sizeof(size));
-
-    std::vector<char> buffer(str.begin(), str.end());
-    for (size_t i = 0; i < size; i++) {
-        buffer.data()[i] ^= key;
-    }
-    out.write(buffer.data(), static_cast<std::streamsize>(size));
+int Network::getSocket() const {
+    return _socket;
 }
 
-std::string Network::deserialize(std::istream &in, char key) {
-    size_t size = 0;
-    in.clear();
+void Network::createPlayerCallback(SmartBuffer &SmartBuffer) {
+    uint16_t id, x, y, size, textSize;
+    std::string name = "";
+    SmartBuffer >> id >> name >> x >> y >> size >> textSize;
+    sf::View view = sf::View(sf::FloatRect(0, 0, 1280, 720));
+    std::pair<float, float> pos = {x, y};
+    _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, size), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}), View(view, {1280, 720}));
+    _entities[id + 1] = GameEngine::Entity(id + 1, Text(name, "font/Inter_Bold.ttf", 30), Position({{pos.first, pos.second}}), Link(id));
+}
 
-    if (!in.read(reinterpret_cast<char *>(&size), sizeof(size))) {
-        return "";
-    }
+void Network::updatePosition(SmartBuffer &smartBuffer) {
+    uint16_t id;
+    float x, y;
+    smartBuffer >> id >> x >> y;
+    std::pair<float, float> pos = {x, y};
+    GameEngine::System system;
+    system.update(id, _entities, GameEngine::UpdateType::Position, pos); 
+    //system.update(id + 1, _entities, GameEngine::UpdateType::Position, pos, 0);
+}
 
-    if (size > static_cast<size_t>(in.rdbuf()->in_avail())) {
-        return "";
+void Network::createMap(SmartBuffer &smartBuffer) {
+    uint16_t id;
+    smartBuffer >> id;
+    _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, 5), Color({173, 216, 230, 255}));
+}
+
+void Network::addFood(SmartBuffer &smartBuffer) {
+    uint16_t mapid, foodid, x, y;
+    smartBuffer >> mapid >> x >> y;
+    if (_entities.find(mapid) != _entities.end()) {
+        if (!_entities[mapid].hasComponent<Position>()) {
+            _entities[mapid].addComponent(Position({{x, y}}));
+        } else {
+            _entities[mapid].getComponent<Position>().addPosition(x, y);
+        }
     }
-    std::vector<char> buffer(size);
-    in.read(buffer.data(), static_cast<std::streamsize>(size));
-    std::cout << "Buffer: " << std::string(buffer.begin(), buffer.end()) << std::endl;
-    for (size_t i = 0; i < size; i++) {
-        buffer[i] ^= key;
+}
+
+void Network::createPlayerBroadcast(SmartBuffer &SmartBuffer) {
+    uint16_t id, x, y, size, textSize;
+    std::string name = "";
+    SmartBuffer >> id >> name >> x >> y >> size >> textSize;
+    std::pair<float, float> pos = {x, y};
+    _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, size), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}));
+    _entities[id + 1] = GameEngine::Entity(id + 1, Text(name, "font/Inter_Bold.ttf", 30), Position({{pos.first, pos.second}}), Link(id));
+}
+
+void Network::eatFood(SmartBuffer &smartBuffer) {
+    GameEngine::System system;
+    uint16_t foodId, mapId, x, y, clientId;
+    float size;
+    unsigned int textSize;
+    smartBuffer >> foodId >> mapId >> x >> y >> clientId >> size >> textSize;
+    if (_entities.find(mapId) != _entities.end()) {
+        std::pair<float, float> pos = {x, y};
+        _entities[mapId].getComponent<Position>().removePosition(pos);
+        system.update(clientId, _entities, GameEngine::UpdateType::CircleRadius, size);
+        /*if (textSize > 0) {
+            system.update(clientId + 1, _entities, GameEngine::UpdateType::TextSize, textSize);
+        }*/
+        if (_entities[clientId].hasComponent<View>()) {
+            auto &viewComp = _entities[clientId].getComponent<View>();
+            std::pair<float, float> viewSize = viewComp.getSize();
+            float playerSize = size;
+            const std::pair<float, float> V0 = {1280.0f, 720.0f};
+            const float S0 = 30.0f;
+            const float alpha = 0.6f;
+            std::pair<float, float> newSize = {
+                V0.first * std::pow(playerSize / S0, alpha),
+                V0.second * std::pow(playerSize / S0, alpha)
+            };
+            system.update(clientId, _entities, GameEngine::UpdateType::View, newSize);
+            std::pair<float, float> newScorePos = {
+              pos.first + 10.0f,
+              pos.second + 10.0f
+            };
+            system.update(1000, _entities, GameEngine::UpdateType::Position, newScorePos, 0);                                
+            system.update(1000, _entities, GameEngine::UpdateType::Text, "Score: " + std::to_string(score));
+        }
     }
-    return std::string(buffer.begin(), buffer.end());
 }
 
 void Network::handleSelect(std::pair<float, float> direction) {
     fd_set readfds;
     fd_set writefds;
     GameEngine::System system;
-    struct timeval timeout;
-    timeout.tv_sec = 1;
-    timeout.tv_usec = 500000;
     int ret;
+    SmartBuffer smartBuffer;
+    struct timeval timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 10000;
 
     FD_ZERO(&readfds);
     FD_ZERO(&writefds);
+    if (_socket == -1) {
+        throw std::runtime_error("Socket not initialized before select");
+    }
+    if (_socket < 0) {
+        throw std::runtime_error("Invalid socket in handleSelect");
+    }
+    if (_socket >= FD_SETSIZE) {
+        throw std::runtime_error("Socket descriptor exceeds FD_SETSIZE");
+    }
     FD_SET(_socket, &readfds);
     FD_SET(_socket, &writefds);
     ret = select(FD_SETSIZE, &readfds, &writefds, NULL, &timeout);
@@ -106,172 +171,66 @@ void Network::handleSelect(std::pair<float, float> direction) {
     }
     if (ret) {
         if (FD_ISSET(_socket, &readfds)) {
-            std::string data = receiveData();
-            std::vector<std::string> datas = splitString(data, '\n');
-            if (_buffer.length() > 0) {
-                datas[0] = _buffer + datas[0];
-                _buffer.clear();
-            }
-            if (data[data.length() - 1] != '\n') {
-                _buffer = datas[datas.size() - 1];
-                datas.pop_back();
-            }
-            for (const auto &line : datas) {
-                if (line.empty()) {
-                    continue;
-                }
-                if (line.compare(0, 1, "2") == 0) {
-                    std::vector<std::string> args = splitString(line, ' ');
-                    std::cout << "Callback" << std::endl;
-                    if (args.size() == 7) {
-                        int id = std::stoi(args[1]);
-                        std::string name = args[2];
-                        std::pair<float, float> pos = {std::stof(args[3]), std::stof(args[4])};
-                        int size = std::stoi(args[5]);
-                        unsigned int textSize = std::stoi(args[6]);
-                        sf::View view = sf::View(sf::FloatRect(0, 0, 1280, 720));
-                        _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, size), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}), View(view, {1280, 720}));
-                        _entities[id + 1] = GameEngine::Entity(id + 1, Text(name, "font/Inter_Bold.ttf", textSize), Position({{pos.first + size + 30, pos.second + size + 30}}));
-                        _entities[1000] = GameEngine::Entity(1000, Text("Score: 0", "font/Inter_Bold.ttf", 30), Position({{pos.first, pos.second}}));
-                    }
-                }
-                if (line.compare(0, 1, "3") == 0) {
-                    std::cout << "Broadcast" << std::endl;
-                    std::vector<std::string> args = splitString(line, ' ');
-                    if (args.size() == 7) {
-                        int id = std::stoi(args[1]);
-                        std::string name = args[2];
-                        std::pair<float, float> pos = {std::stof(args[3]), std::stof(args[4])};
-                        int size = std::stoi(args[5]);
-                        unsigned int textSize = std::stoi(args[6]);
-                        _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, size), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}));
-                        _entities[id + 1] = GameEngine::Entity(id + 1, Text(name, "font/Inter_Bold.ttf", textSize), Position({{pos.first + size, pos.second + size}}), Link(id));
-                    }
-                }
-                if (line.compare(0, 1, "4") == 0) {
-                    std::cout << "Update Position" << std::endl;
-                    std::vector<std::string> args = splitString(line, ' ');
-                    if (args.size() == 5) {
-                        int id = std::stoi(args[1]);
-                        std::pair<float, float> pos = {std::stof(args[2]), std::stof(args[3])};
-                        int size = std::stoi(args[4]);
-                        system.update(id, _entities, GameEngine::UpdateType::Position, pos, 0);
-                        std::pair<float, float> newPos = {pos.first + size, pos.second + size};
-                        system.update(id + 1, _entities, GameEngine::UpdateType::Position, newPos, 0);
-                        newPos = {pos.first + size, pos.second + size};
-                        system.update(1000, _entities, GameEngine::UpdateType::Position, newPos, 0);
-                    }
-                }
-                if (line.compare(0, 1, "5") == 0) {
-                    std::cout << "Create Map" << std::endl;
-                    std::vector<std::string> args = splitString(line, ' ');
-                    if (args.size() == 2) {
-                        int id = std::stoi(args[1]);
-                        _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, 5), Color({173, 216, 230, 255}));
-                    }
-                }
-                if (line.compare(0, 1, "6") == 0) {
-                    std::cout << "Add Food" << std::endl;
-                    std::vector<std::string> args = splitString(line, ' ');
-                    if (args.size() == 4) {
-                        int id = std::stoi(args[1]);
-                        std::pair<float, float> pos = {std::stof(args[2]), std::stof(args[3])};
-                        if (_entities.find(id) != _entities.end()) {
-                            if (_entities[id].hasComponent<Position>()) {
-                                _entities[id].getComponent<Position>().addPosition(pos.first, pos.second);
-                            } else {
-                                _entities[id].addComponent(Position({{pos.first, pos.second}}));
-                            }
-                        }
-                    }
-                }
+            receiveData(smartBuffer);
+            int16_t opCode;
+            smartBuffer >> opCode;
+            switch(opCode) {
+                case 2:
+                    std::cout << "[Network] Create Player" << std::endl;
+                    createPlayerCallback(smartBuffer);
+                    break;
+                
+                case 3:
+                    std::cout << "[Network] Create Player Broadcast" << std::endl;
+                    createPlayerBroadcast(smartBuffer);
+                    break;
+                
+                case 4:
+                    std::cout << "[Network] Update Position" << std::endl;
+                    updatePosition(smartBuffer);
+                    break;
 
-                if (line.compare(0, 1, "7") == 0) {
-                    std::cout << "Remove Food" << std::endl;
-                    std::vector<std::string> args = splitString(line, ' ');
-                    if (args.size() == 9) {
-                        int foodId = std::stoi(args[1]);
-                        int id = std::stoi(args[2]);
-                        std::pair<float, float> pos = {std::stof(args[3]), std::stof(args[4])};
-                        int clientId = std::stoi(args[5]);
-                        float size = std::stoi(args[6]);
-                        unsigned int textSize = std::stoi(args[7]);
-                        int score = std::stoi(args[8]);
-                        if (_entities.find(id) != _entities.end()) {
-                            _entities[id].getComponent<Position>().removePosition(pos);
-                            system.update(clientId, _entities, GameEngine::UpdateType::CircleRadius, size);
-                            system.update(clientId + 1, _entities, GameEngine::UpdateType::TextSize, textSize);
-                            if (_entities[clientId].hasComponent<View>()) {
-                                auto &viewComp = _entities[clientId].getComponent<View>();
-                                std::pair<float, float> viewSize = viewComp.getSize();
-                                float playerSize = size;
-                                const std::pair<float, float> V0 = {1280.0f, 720.0f};
-                                const float S0 = 60.0f;
-                                const float alpha = 1.2f;
-                                std::pair<float, float> newSize = {
-                                    V0.first * std::pow(playerSize / S0, alpha),
-                                    V0.second * std::pow(playerSize / S0, alpha)
-                                };
-                                system.update(clientId, _entities, GameEngine::UpdateType::View, newSize);
-                                //std::pair<float, float> newScorePos = {_entities[1000].getComponent<Position>().getPositionX(0) - 25, _entities[1000].getComponent<Position>().getPositionY(0) + 24};
-                                std::pair<float, float> newScorePos = {
-                                    pos.first + 10.0f,
-                                    pos.second + 10.0f
-                                };
-                                system.update(1000, _entities, GameEngine::UpdateType::Position, newScorePos, 0);                                
-                                system.update(1000, _entities, GameEngine::UpdateType::Text, "Score: " + std::to_string(score));
-                            }
-                        }
-                    }
-                }
+                case 5:
+                    std::cout << "[Network] Create Map" << std::endl;
+                    createMap(smartBuffer);
+                    break;
 
-                if (line.compare(0, 1, "8") == 0) {
-                    std::cout << "Remove Player" << std::endl;
-                    std::vector<std::string> args = splitString(line, ' ');
-                    if (args.size() == 4) {
-                        int playerId = std::stoi(args[1]);
-                        std::pair<float, float> pos = {std::stof(args[2]), std::stof(args[3])};
-                        _entities[playerId].removeComponent<Shape>();
-                    }
-                }
+                case 6:
+                    std::cout << "[Network] Add Food" << std::endl;
+                    addFood(smartBuffer);
+                    break;
+
+                case 7:
+                    std::cout << "[Network] Eat Food" << std::endl;
+                    eatFood(smartBuffer);
+                    break;
+                    
+                default:
+                    std::cout << "[Network] Unknown operation code: " << opCode << std::endl;
+                    break;
             }
         }
         if (FD_ISSET(_socket, &writefds)) {
-            std::string data = "4 " + std::to_string(direction.first) + " " + std::to_string(direction.second) + "\n";
-            //std::ostringstream out;
-            //serialize(data, out, _key);
-            send(_socket, data.c_str(), data.size(), 0);
+            smartBuffer.reset();
+            smartBuffer << static_cast<int16_t>(4) << static_cast<float_t>(direction.first) << static_cast<float_t>(direction.second);
+            if (send(_socket, smartBuffer.getBuffer(), smartBuffer.getSize(), 0) <= 0) {
+                throw std::runtime_error("Failed to send data");
+            }
         }
     }
 }
 
-std::string Network::receiveData() {
-    int available = 0;
-    if (ioctl(_socket, FIONREAD, &available) < 0) {
-        throw std::runtime_error("Failed to check available data");
+void Network::receiveData(SmartBuffer &smartBuffer) {
+    uint32_t size;
+    if (recv(_socket, &size, sizeof(uint32_t), 0) <= 0) {
+        throw std::runtime_error("Failed to receive size");
     }
-
-    if (available <= 0) {
-        return "";
-    }
-
-    std::vector<char> buffer(available + 1, 0);
-    ssize_t bytesReceived = recv(_socket, buffer.data(), available, 0);
-    
-    if (bytesReceived < 0) {
+    std::vector<uint8_t> data(size);
+    if (recv(_socket, data.data(), size, 0) <= 0) {
         throw std::runtime_error("Failed to receive data");
     }
-
-    std::cout << "Bytes received: " << bytesReceived << std::endl;
-
-    std::string data(buffer.begin(), buffer.begin() + bytesReceived);
-    //std::istringstream in(data);
-    
-    std::cout << "Received: " << data << std::endl;
-    //data = deserialize(in, _key);
-    std::cout << "Deserialized: " << data << std::endl;
-    
-    return data;
+    smartBuffer.reset();
+    smartBuffer.inject(data.data(), size);
 }
 
 Network::~Network() {}
