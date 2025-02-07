@@ -135,7 +135,7 @@ void Protocol::check_food_collision(int clientId, const std::pair<float, float>&
     }
 }
 
-void Protocol::check_player_collision(int clientId, std::map<int, Client>& clients) {
+void Protocol::check_player_collision(int clientId, std::map<int, Client>& clients, SmartBuffer &smartBuffer) {
     auto it1 = clients.find(clientId);
     if (it1 == clients.end()) return; 
 
@@ -181,7 +181,7 @@ void Protocol::check_player_collision(int clientId, std::map<int, Client>& clien
                 std::string removeData = std::to_string(OpCode::REMOVE_PLAYER) + " " +
                                          std::to_string(clientId) + " " +
                                          std::to_string(pos1.first) + " " +
-                                         std::to_string(pos1.second) + "\n";                    
+                                         std::to_string(pos1.second) + "\n";
                 //Server::get().sendToAllClients(removeData);
                 clients.erase(it1);
                 break;
@@ -190,10 +190,10 @@ void Protocol::check_player_collision(int clientId, std::map<int, Client>& clien
     }
 }
 
-void Protocol::update_position(int id, std::map<int, Client>& clients, SmartBuffer &SmartBuffer) {
+void Protocol::update_position(int id, std::map<int, Client>& clients, SmartBuffer &smartBuffer) {
     auto client = clients.find(id);
     float x, y;
-    SmartBuffer >> x >> y;
+    smartBuffer >> x >> y;
     if (client == clients.end()) {
         std::cerr << "Client not found" << std::endl;
         return;
@@ -205,13 +205,13 @@ void Protocol::update_position(int id, std::map<int, Client>& clients, SmartBuff
         return;
     }
 
-    check_food_collision(id, clientPos, client->second, SmartBuffer);
-    //check_player_collision(id, clients);
+    check_food_collision(id, clientPos, client->second, smartBuffer);
+    check_player_collision(id, clients, smartBuffer);
 
     client->second.setPosition(clientPos);
-    SmartBuffer.reset();
-    SmartBuffer << static_cast<int16_t>(OpCode::UPDATE_POSITION) << static_cast<int16_t>(id) << static_cast<float_t>(clientPos.first) << static_cast<float_t>(clientPos.second);
-    Server::get().sendToAllClients(SmartBuffer);
+    smartBuffer.reset();
+    smartBuffer << static_cast<int16_t>(OpCode::UPDATE_POSITION) << static_cast<int16_t>(id) << static_cast<float_t>(clientPos.first) << static_cast<float_t>(clientPos.second);
+    Server::get().sendToAllClients(smartBuffer);
 }
 
 void Protocol::handle_message(int id, int clientSocket, std::map<int, Client>& clients, SmartBuffer& smartBuffer) {
