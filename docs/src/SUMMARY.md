@@ -13,14 +13,8 @@
 
 8. [Menu](./client/menu.md)
 
-9. [Network Client](./client/network/networkClient.md)
-     - [Protocol](./client/network/protocol.md)
-     - [Singleton](./client/network/singleton.md)
-     - [Socket](./client/network/socket.md)
-     - [Tcp Socked](./client/network/tcpSocket.md)
-
-10. [UTILS - Get Responsive Value](./client/utils/getResponsiveValue.md)
-     - [Logger](./client/utils/logger.md)
+9. [Network Client](./client/network/network.md)
+10. [Protocol](./client/network/protocol.md)
 
 11. [ECS](./ecs/ecs.md)
      - [Components](./ecs/components.md)
