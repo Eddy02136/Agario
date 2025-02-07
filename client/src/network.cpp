@@ -56,6 +56,10 @@ std::map<int, GameEngine::Entity> Network::getEntities() const {
     return _entities;
 }
 
+int Network::getSocket() const {
+    return _socket;
+}
+
 void Network::createPlayerCallback(SmartBuffer &SmartBuffer) {
     uint16_t id, x, y, size, textSize;
     std::string name = "";
@@ -84,10 +88,12 @@ void Network::createMap(SmartBuffer &smartBuffer) {
 void Network::addFood(SmartBuffer &smartBuffer) {
     uint16_t mapid, foodid, x, y;
     smartBuffer >> mapid >> x >> y;
-    if (!_entities[mapid].hasComponent<Position>()) {
-        _entities[mapid].addComponent(Position({{x, y}}));
-    } else {
-        _entities[mapid].getComponent<Position>().addPosition(x, y);
+    if (_entities.find(mapid) != _entities.end()) {
+        if (!_entities[mapid].hasComponent<Position>()) {
+            _entities[mapid].addComponent(Position({{x, y}}));
+        } else {
+            _entities[mapid].getComponent<Position>().addPosition(x, y);
+        }
     }
 }
 
@@ -139,6 +145,15 @@ void Network::handleSelect(std::pair<float, float> direction) {
 
     FD_ZERO(&readfds);
     FD_ZERO(&writefds);
+    if (_socket == -1) {
+        throw std::runtime_error("Socket not initialized before select");
+    }
+    if (_socket < 0) {
+        throw std::runtime_error("Invalid socket in handleSelect");
+    }
+    if (_socket >= FD_SETSIZE) {
+        throw std::runtime_error("Socket descriptor exceeds FD_SETSIZE");
+    }
     FD_SET(_socket, &readfds);
     FD_SET(_socket, &writefds);
     ret = select(FD_SETSIZE, &readfds, &writefds, NULL, &timeout);

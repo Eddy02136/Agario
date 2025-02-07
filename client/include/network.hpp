@@ -14,14 +14,13 @@ class Network {
         void connectToServer(std::string &name);
         void receiveData(SmartBuffer &smartBuffer);
         void handleSelect(std::pair<float, float> direction);
-        void serialize ( const std::string &str, std::ostream &out, char key);
         void createPlayerCallback(SmartBuffer &SmartBuffer);
         void createPlayerBroadcast(SmartBuffer &SmartBuffer);
         void updatePosition(SmartBuffer &smartBuffer);
         void createMap(SmartBuffer &smartBuffer);
         void eatFood(SmartBuffer &smartBuffer);
         void addFood(SmartBuffer &smartBuffer);
-        std::string deserialize(std::istream &in, char key);
+        int getSocket() const;
         std::map<int, GameEngine::Entity> getEntities() const;
 
     private:

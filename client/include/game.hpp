@@ -23,4 +23,5 @@ class Game {
         std::string _username = "";
         std::thread _networkThread;
         std::pair<float, float> _direction;
+        bool _isConnected = false;
 };
