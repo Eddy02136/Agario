@@ -10,4 +10,4 @@ file(GLOB_RECURSE HEADERS include/*.hpp include/**/*.hpp)
 add_executable(Client ${SOURCES} ${HEADERS})
 
 target_link_libraries(Client sfml-graphics sfml-window sfml-system sfml-audio GameEngine)
-target_include_directories(Client PUBLIC include)
+target_include_directories(Client PUBLIC include ../external/smart-buffer-cpp/include)

@@ -1,7 +1,7 @@
-
 #include <SFML/Graphics.hpp>
 #include <cmath>
-#include "network.hpp"
+#include <thread>
+#include <atomic>
 #include "System.hpp"
 #include "game.hpp"
 #include "menu.hpp"
@@ -16,8 +16,24 @@ Game& Game::get() {
 static std::pair<float, float> normalize(const std::pair<float, float>& vector) {
     float length = std::sqrt(vector.first * vector.first + vector.second * vector.second);
     if (length != 0)
-        return std::pair<float, float>(vector.first / length, vector.second / length);
-    return std::pair<float, float>(0, 0);
+        return {vector.first / length, vector.second / length};
+    return {0, 0};
+}
+
+std::atomic<bool> _stopNetworkThread{false};
+
+void Game::networkThread(Network &network)
+{
+    try {
+        if (network.getSocket() < 0) {
+            throw std::runtime_error("Failed to connect to server");
+        }
+        while (!_stopNetworkThread) {
+            network.handleSelect(_direction);
+        }
+    } catch (const std::exception &e) {
+        std::cerr << "Network error: " << e.what() << std::endl;
+    }
 }
 
 void Game::gameManager() {
@@ -27,14 +43,18 @@ void Game::gameManager() {
     GameEngine::System system;
     std::pair<float, float> playerPosition(640.0f, 360.0f);
     std::pair<float, float> direction(0.0f, 0.0f);
-    //window.setFramerateLimit(60);
 
     while (window.isOpen()) {
         window.clear();
         sf::Event event;
         while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed)
+            if (event.type == sf::Event::Closed) {
                 window.close();
+                _stopNetworkThread = true;
+                if (_networkThread.joinable()) {
+                    _networkThread.join();
+                }
+            }
             Menu::get().setupInput(event);
         }
         
@@ -44,13 +64,25 @@ void Game::gameManager() {
             if (!_isConnected) {
                 network.connectToServer(_username);
                 _isConnected = true;
+                _stopNetworkThread = false;
+
+                if (_networkThread.joinable()) {
+                    _stopNetworkThread = true;
+                    _networkThread.join();
+                }
+
+                _networkThread = std::thread(&Game::networkThread, this, std::ref(network));
             }
-            network.handleSelect(direction);
             std::map<int, GameEngine::Entity> entities = network.getEntities();
-            direction = handlePlayerMovement(window, playerPosition);
+            _direction = handlePlayerMovement(window, playerPosition);
             system.render(window, entities);
         }
         window.display();
+    }
+
+    _stopNetworkThread = true;
+    if (_networkThread.joinable()) {
+        _networkThread.join();
     }
 }
 
@@ -64,13 +96,17 @@ std::pair<float, float> Game::handlePlayerMovement(sf::RenderWindow& window, std
     return normalizedDirection;
 }
 
-
 std::string Game::getUsername() {
     return this->_username;
 }
 
 void Game::setUsername(std::string username) {
-    _username = username;
+    _username = std::move(username);
 }
 
-Game::~Game() {}
+Game::~Game() {
+    _stopNetworkThread = true;
+    if (_networkThread.joinable()) {
+        _networkThread.join();
+    }
+}

@@ -32,66 +32,80 @@ static std::vector<std::string> splitString(const std::string &data, const char 
     return result;
 }
 
-void Protocol::create_player(std::map<int, Client>& clients, std::string name) {
-    if (clients.empty()) {
-        std::cerr << "Client list is empty!" << std::endl;
-        return;
-    }
-
-    auto& lastClient = --clients.end();
-    lastClient->second.setName(name);
-    create_player_callback(clients);
-    create_player_broadcast(clients);
+void Protocol::create_player(int id, std::map<int, Client>& clients, SmartBuffer& smartBuffer) {
+    std::string name;
+    smartBuffer >> name;
+    auto client = clients.find(id);
+    client->second.setName(name);
+    create_player_callback(id, clients, smartBuffer);
+    create_player_broadcast(id, clients, smartBuffer);
+    createMap(id, clients, smartBuffer);
 }
 
-void Protocol::create_player_callback(std::map<int, Client>& clients) {
+void Protocol::createMap(int id, std::map<int, Client>& clients, SmartBuffer& smartBuffer) {
     if (clients.empty()) return;
-
-    auto lastClient = --clients.end();
-    std::string data = std::to_string(OpCode::CREATE_PLAYER_CALLBACK) + " " +
-                       std::to_string(lastClient->first) + " " +
-                       lastClient->second.getName() + " " +
-                       std::to_string(lastClient->second.getPosition().first) + " " +
-                       std::to_string(lastClient->second.getPosition().second) + " " +
-                       std::to_string(lastClient->second.getSize()) + " " +
-                       std::to_string(lastClient->second.getTextSize()) + "\n";
-
-    for (auto &client : clients) {
-        if (client.first != lastClient->first) {
-            data += std::to_string(OpCode::CREATE_PLAYER_BROADCAST) + " " +
-                               std::to_string(client.first) + " " +
-                               client.second.getName() + " " +
-                               std::to_string(client.second.getPosition().first) + " " +
-                               std::to_string(client.second.getPosition().second) + " " +
-                               std::to_string(client.second.getSize()) + " " +
-                               std::to_string(client.second.getTextSize()) + "\n";
-        }
-    }
-    data += std::to_string(OpCode::CREATE_MAP) + " " + std::to_string(Map::get().getId()) + "\n";
+    auto client = clients.find(id);
+    smartBuffer.reset();
+    smartBuffer << static_cast<int16_t>(OpCode::CREATE_MAP) << static_cast<int16_t>(Map::get().getId());
+    Server::get().sendToClient(client->second.getSocket(), smartBuffer);
+    smartBuffer.reset();
     std::map<int, std::pair<int, int>> map = Map::get().getMap();
     for (const auto &food : map) {
-        data += std::to_string(OpCode::ADD_FOOD) + " " + std::to_string(Map::get().getId()) + " " + std::to_string(food.second.first) + " " + std::to_string(food.second.second) + "\n";
+        smartBuffer << static_cast<int16_t>(OpCode::ADD_FOOD)
+                    << static_cast<int16_t>(Map::get().getId())
+                    << static_cast<int16_t>(food.second.first)
+                    << static_cast<int16_t>(food.second.second);
+        Server::get().sendToClient(client->second.getSocket(), smartBuffer);
+        smartBuffer.reset();
     }
-    Server::get().sendToClient(lastClient->second.getSocket(), data);
 }
 
-void Protocol::create_player_broadcast(std::map<int, Client>& clients) {
+void Protocol::create_player_callback(int id, std::map<int, Client>& clients, SmartBuffer &smartBuffer) {
     if (clients.empty()) return;
 
-    auto lastClient = --clients.end();
-    std::pair<float, float> pos = lastClient->second.getPosition();
-    int size = lastClient->second.getSize();
-    std::string newPlayerData = std::to_string(OpCode::CREATE_PLAYER_BROADCAST) + " " +
-                                std::to_string(lastClient->first) + " " +
-                                lastClient->second.getName() + " " +
-                                std::to_string(pos.first) + " " +
-                                std::to_string(pos.second) + " " +
-                                std::to_string(size) + " " + 
-                                std::to_string(lastClient->second.getTextSize()) + "\n";
-    Server::get().sendToAllClientsExcept(lastClient->first, newPlayerData);
+    auto client = clients.find(id);
+    smartBuffer.reset();
+    smartBuffer << static_cast<int16_t>(OpCode::CREATE_PLAYER_CALLBACK)
+                << static_cast<int16_t>(id)
+                << client->second.getName()
+                << static_cast<int16_t>(client->second.getPosition().first)
+                << static_cast<int16_t>(client->second.getPosition().second)
+                << static_cast<int16_t>(client->second.getSize())
+                << static_cast<int16_t>(client->second.getTextSize());
+    Server::get().sendToClient(client->second.getSocket(), smartBuffer);
 }
 
-void Protocol::check_food_collision(int clientId, const std::pair<float, float>& clientPos, Client& client) {
+void Protocol::create_player_broadcast(int id, std::map<int, Client>& clients, SmartBuffer &smartBuffer) {
+    if (clients.empty()) return;
+    auto client = clients.find(id);
+    smartBuffer.reset();
+    for (auto &tmpClient : clients) {
+        if (tmpClient.first != client->first) {
+            smartBuffer << static_cast<int16_t>(OpCode::CREATE_PLAYER_BROADCAST)
+                        << static_cast<int16_t>(tmpClient.first)
+                        << tmpClient.second.getName()
+                        << static_cast<int16_t>(tmpClient.second.getPosition().first)
+                        << static_cast<int16_t>(tmpClient.second.getPosition().second)
+                        << static_cast<int16_t>(tmpClient.second.getSize())
+                        << static_cast<int16_t>(tmpClient.second.getTextSize());
+            Server::get().sendToClient(client->second.getSocket(), smartBuffer);
+            smartBuffer.reset();
+        }
+    }
+    std::pair<float, float> pos = client->second.getPosition();
+    int size = client->second.getSize();
+    smartBuffer.reset();
+    smartBuffer << static_cast<int16_t>(OpCode::CREATE_PLAYER_BROADCAST)
+                << static_cast<int16_t>(id)
+                << client->second.getName()
+                << static_cast<int16_t>(pos.first)
+                << static_cast<int16_t>(pos.second)
+                << static_cast<int16_t>(size)
+                << static_cast<int16_t>(client->second.getTextSize());
+    Server::get().sendToAllClientsExcept(id, smartBuffer);
+}
+
+void Protocol::check_food_collision(int clientId, const std::pair<float, float>& clientPos, Client& client, SmartBuffer &smartBuffer) {
     auto foodMap = Map::get().getMap();
 
     float clientRadius = client.getSize(); 
@@ -99,24 +113,24 @@ void Protocol::check_food_collision(int clientId, const std::pair<float, float>&
         int foodId = food.first;
         const auto& foodPos = food.second;
 
-
+        smartBuffer.reset();
         float dx = (clientPos.first + clientRadius) - foodPos.first;
         float dy = (clientPos.second + clientRadius) - foodPos.second;
         float distance = std::sqrt(dx * dx + dy * dy);
 
         if (distance <= (clientRadius)) {
             client.setSize(client.getSize() + 1);
-            client.setTextSize(client.getSize());
-            std::string data = std::to_string(OpCode::REMOVE_FOOD) + " " +
-                               std::to_string(foodId) + " " +
-                               std::to_string(Map::get().getId()) + " " +
-                               std::to_string(foodPos.first) + " " +
-                               std::to_string(foodPos.second) + " " +
-                               std::to_string(clientId) + " " +
-                               std::to_string(client.getSize()) + " " + 
-                               std::to_string(client.getTextSize()) + "\n";
+            client.setTextSize(client.getSize() + 40);
+            smartBuffer << static_cast<int16_t>(OpCode::REMOVE_FOOD)
+                        << static_cast<int16_t>(foodId)
+                        << static_cast<int16_t>(Map::get().getId())
+                        << static_cast<int16_t>(foodPos.first)
+                        << static_cast<int16_t>(foodPos.second)
+                        << static_cast<int16_t>(clientId)
+                        << static_cast<float_t>(client.getSize())
+                        << static_cast<unsigned int>(client.getTextSize());
             Map::get().removeFood(foodId);
-            Server::get().sendToAllClients(data);
+            Server::get().sendToAllClients(smartBuffer);
         }
     }
 }
@@ -157,7 +171,7 @@ void Protocol::check_player_collision(int clientId, std::map<int, Client>& clien
                                          std::to_string(pos2.first) + " " +
                                          std::to_string(pos2.second) + "\n";
 
-                Server::get().sendToAllClients(removeData);
+                //Server::get().sendToAllClients(removeData);
                 clients.erase(it2);
             } else if (size2 > size1) {
                 player2.setSize(size2 + size1 / 2);
@@ -168,7 +182,7 @@ void Protocol::check_player_collision(int clientId, std::map<int, Client>& clien
                                          std::to_string(clientId) + " " +
                                          std::to_string(pos1.first) + " " +
                                          std::to_string(pos1.second) + "\n";                    
-                Server::get().sendToAllClients(removeData);
+                //Server::get().sendToAllClients(removeData);
                 clients.erase(it1);
                 break;
             }
@@ -176,83 +190,61 @@ void Protocol::check_player_collision(int clientId, std::map<int, Client>& clien
     }
 }
 
-
-
-void Protocol::update_position(int id, std::map<int, Client>& clients, std::pair<float, float> direction) {
+void Protocol::update_position(int id, std::map<int, Client>& clients, SmartBuffer &SmartBuffer) {
     auto client = clients.find(id);
+    float x, y;
+    SmartBuffer >> x >> y;
     if (client == clients.end()) {
         std::cerr << "Client not found" << std::endl;
         return;
     }
     auto clientPos = client->second.getPosition();
-    clientPos.first += direction.first * client->second.getSpeed();
-    clientPos.second += direction.second * client->second.getSpeed();
+    clientPos.first += x * client->second.getSpeed();
+    clientPos.second += y * client->second.getSpeed();
     if (clientPos.first < 0 || clientPos.first > Map::get().getWidth() || clientPos.second < 0 || clientPos.second > Map::get().getHeight()) {
         return;
     }
 
-    check_food_collision(id, clientPos, client->second);
-    check_player_collision(id, clients);
+    check_food_collision(id, clientPos, client->second, SmartBuffer);
+    //check_player_collision(id, clients);
 
     client->second.setPosition(clientPos);
-    for (auto &client : clients) {
-        std::string data = std::to_string(OpCode::UPDATE_POSITION) + " " + std::to_string(id) + " " + std::to_string(clientPos.first) + " " + std::to_string(clientPos.second) + " " + std::to_string(client.second.getSize()) + "\n";
-        Server::get().sendToClient(client.second.getSocket(), data);
-    }
+    SmartBuffer.reset();
+    SmartBuffer << static_cast<int16_t>(OpCode::UPDATE_POSITION) << static_cast<int16_t>(id) << static_cast<float_t>(clientPos.first) << static_cast<float_t>(clientPos.second);
+    Server::get().sendToAllClients(SmartBuffer);
 }
 
-bool Protocol::handle_message(int id, int clientSocket, std::map<int, Client>& clients) {
+void Protocol::handle_message(int id, int clientSocket, std::map<int, Client>& clients, SmartBuffer& smartBuffer) {
     try {
-        std::string data = Server::get().receiveFromClient(clientSocket);
-        if (data.empty()) {
-            return true;
+        if (smartBuffer.getSize() < sizeof(int16_t)) {
+            std::cerr << "[Protocol] Received invalid message with insufficient size." << std::endl;
+            return;
+        }
+        int16_t opCode;
+        smartBuffer >> opCode;
+
+        switch (static_cast<OpCode>(opCode)) {
+        case DEFAULT:
+            std::cout << "[Protocol] DEFAULT OpCode received. No action taken." << std::endl;
+            break;
+
+        case CREATE_PLAYER:
+            std::cout << "[Protocol] CREATE_PLAYER OpCode received." << std::endl;
+            Protocol::get().create_player(id, clients, smartBuffer);
+            break;
+
+        case UPDATE_POSITION:
+            std::cout << "[Protocol] UPDATE_POSITION OpCode received." << std::endl;
+            Protocol::get().update_position(id, clients, smartBuffer);
+            break;
+
+        default:
+            break;
         }
 
-        int opCode = 0;
-        float x = 0;
-        float y = 0;
-        std::string name;
-        
-        std::vector<std::string> datas = splitString(data, '\n');
-        if (_buffer.length() > 0) {
-            datas[0] = _buffer + datas[0];
-            _buffer.clear();
-        }
-        if (data[data.length() - 1] != '\n') {
-            _buffer = datas[datas.size() - 1];
-            datas.pop_back();
-        }
-        for (const auto &line : datas) {
-            if (line.empty()) continue;
-
-            std::vector<std::string> args = splitString(line, ' ');
-            opCode = std::stoi(args[0]);
-
-            switch (opCode) {
-                case CREATE_PLAYER:
-                    if (args.size() == 2) {
-                        name = args[1];
-                        Protocol::get().create_player(clients, name);
-                    }
-                    break;
-
-                case UPDATE_POSITION:
-                    if (args.size() == 3) {
-                        x = std::stof(args[1]);
-                        y = std::stof(args[2]);
-                        Protocol::get().update_position(id, clients, {x, y});
-                    }
-                    break;
-
-                default:
-                    std::cerr << "[Server] Unknown operation code: " << opCode << std::endl;
-                    break;
-            }
-        }
-        return false;
     } catch (const std::exception &e) {
         std::cerr << "[Server] Exception in client thread: " << e.what() << std::endl;
-        return true;
+        return;
     }
 }
 
