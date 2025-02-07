@@ -61,4 +61,12 @@ void Client::setTextSize(float newSize) {
     this->_textSize = newSize;
 }
 
+int Client::getScore() const {
+    return this->_score;
+}
+
+void Client::setScore(int score) {
+    this->_score = score;
+}
+
 Client::~Client() {}

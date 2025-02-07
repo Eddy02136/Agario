@@ -132,6 +132,12 @@ void Network::eatFood(SmartBuffer &smartBuffer) {
                 V0.second * std::pow(playerSize / S0, alpha)
             };
             system.update(clientId, _entities, GameEngine::UpdateType::View, newSize);
+            std::pair<float, float> newScorePos = {
+              pos.first + 10.0f,
+              pos.second + 10.0f
+            };
+            system.update(1000, _entities, GameEngine::UpdateType::Position, newScorePos, 0);                                
+            //system.update(1000, _entities, GameEngine::UpdateType::Text, "Score: " + std::to_string(score));
         }
     }
 }
