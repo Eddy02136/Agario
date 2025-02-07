@@ -171,7 +171,7 @@ void Protocol::check_player_collision(int clientId, std::map<int, Client>& clien
                                          std::to_string(pos2.first) + " " +
                                          std::to_string(pos2.second) + "\n";
 
-                Server::get().sendToAllClients(removeData);
+                //Server::get().sendToAllClients(removeData);
                 clients.erase(it2);
             } else if (size2 > size1) {
                 player2.setSize(size2 + size1 / 2);
@@ -182,7 +182,7 @@ void Protocol::check_player_collision(int clientId, std::map<int, Client>& clien
                                          std::to_string(clientId) + " " +
                                          std::to_string(pos1.first) + " " +
                                          std::to_string(pos1.second) + "\n";                    
-                Server::get().sendToAllClients(removeData);
+                //Server::get().sendToAllClients(removeData);
                 clients.erase(it1);
                 break;
             }

@@ -29,7 +29,7 @@ class Protocol {
         void update_position(int id, std::map<int, Client>& clients, SmartBuffer& smartBuffer);
         void handle_message(int id, int clientSocket, std::map<int, Client>& clients, SmartBuffer& smartBuffer);
         void check_food_collision(int clientId, const std::pair<float, float>& clientPos, Client& client, SmartBuffer& smartBuffer);
-        void check_player_collision(std::map<int, Client>& clients);
+        void check_player_collision(int clientId, std::map<int, Client>& clients);
 
     private:
         std::string _buffer;
