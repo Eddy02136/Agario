@@ -129,7 +129,8 @@ void Protocol::check_food_collision(int clientId, const std::pair<float, float>&
                         << static_cast<int16_t>(foodPos.second)
                         << static_cast<int16_t>(clientId)
                         << static_cast<float_t>(client.getSize())
-                        << static_cast<unsigned int>(client.getTextSize());
+                        << static_cast<unsigned int>(client.getTextSize())
+                        << static_cast<int16_t>(client.getScore());
             Map::get().removeFood(foodId);
             Server::get().sendToAllClients(smartBuffer);
         }

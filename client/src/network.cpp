@@ -68,6 +68,8 @@ void Network::createPlayerCallback(SmartBuffer &SmartBuffer) {
     std::pair<float, float> pos = {x, y};
     _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, size), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}), View(view, {1280, 720}));
     _entities[id + 1] = GameEngine::Entity(id + 1, Text(name, "font/Inter_Bold.ttf", 30), Position({{pos.first, pos.second}}), Link(id));
+    _entities[1000] = GameEngine::Entity(1000, Text("Score: 0", "font/Inter_Bold.ttf", 30), Position({{pos.first, pos.second}}), Link(id));
+
 }
 
 void Network::updatePosition(SmartBuffer &smartBuffer) {
@@ -105,6 +107,7 @@ void Network::createPlayerBroadcast(SmartBuffer &SmartBuffer) {
     std::pair<float, float> pos = {x, y};
     _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, size), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}));
     _entities[id + 1] = GameEngine::Entity(id + 1, Text(name, "font/Inter_Bold.ttf", 30), Position({{pos.first, pos.second}}), Link(id));
+    
 }
 
 void Network::eatFood(SmartBuffer &smartBuffer) {
@@ -112,7 +115,8 @@ void Network::eatFood(SmartBuffer &smartBuffer) {
     uint16_t foodId, mapId, x, y, clientId;
     float size;
     unsigned int textSize;
-    smartBuffer >> foodId >> mapId >> x >> y >> clientId >> size >> textSize;
+    uint16_t score;
+    smartBuffer >> foodId >> mapId >> x >> y >> clientId >> size >> textSize >> score;
     if (_entities.find(mapId) != _entities.end()) {
         std::pair<float, float> pos = {x, y};
         _entities[mapId].getComponent<Position>().removePosition(pos);
@@ -136,7 +140,7 @@ void Network::eatFood(SmartBuffer &smartBuffer) {
               pos.first + 10.0f,
               pos.second + 10.0f
             };
-            system.update(1000, _entities, GameEngine::UpdateType::Position, newScorePos, 0);                                
+            //system.update(1000, _entities, GameEngine::UpdateType::Position, newScorePos, 0);                                
             //system.update(1000, _entities, GameEngine::UpdateType::Text, "Score: " + std::to_string(score));
         }
     }
