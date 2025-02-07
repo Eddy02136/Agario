@@ -34,6 +34,14 @@ fd_set& Server::getWds() {
     return this->wfds;
 }
 
+int Server::getId() {
+    return this->id;
+}
+
+void Server::setId(int id) {
+    this->id = id;
+}
+
 void Server::init() {
     int opt = 1;
 

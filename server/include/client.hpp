@@ -20,6 +20,8 @@ class Client {
         std::pair<float, float> getPosition() const;
         void setPosition(std::pair<float, float> pos);
         float getSpeed() const;
+        int getScore() const;
+        void setScore(int score);
         float getSize();
         void setSize(float size); 
 
@@ -32,4 +34,5 @@ class Client {
         float _size;
         float _textSize;
         float speed = 0.5;
+        int _score = 0;
 };

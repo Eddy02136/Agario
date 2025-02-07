@@ -98,8 +98,10 @@ void Protocol::check_food_collision(int clientId, const std::pair<float, float>&
         float distance = std::sqrt(dx * dx + dy * dy);
 
         if (distance <= (clientRadius)) {
-            client.setSize(client.getSize() + 1);
+            float newSize = client.getSize() + (1.0f / std::sqrt(client.getSize()));
+            client.setSize(newSize);
             client.setTextSize(client.getSize() + 40);
+            client.setScore(client.getScore() + 2);
             std::string data = std::to_string(OpCode::REMOVE_FOOD) + " " +
                                std::to_string(foodId) + " " +
                                std::to_string(Map::get().getId()) + " " +
@@ -107,7 +109,8 @@ void Protocol::check_food_collision(int clientId, const std::pair<float, float>&
                                std::to_string(foodPos.second) + " " +
                                std::to_string(clientId) + " " +
                                std::to_string(client.getSize()) + " " + 
-                               std::to_string(client.getTextSize()) + "\n";
+                               std::to_string(client.getTextSize()) + " " +
+                               std::to_string(client.getScore()) + "\n";
             Map::get().removeFood(foodId);
             Server::get().sendToAllClients(data);
         }

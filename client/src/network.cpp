@@ -131,7 +131,8 @@ void Network::handleSelect(std::pair<float, float> direction) {
                         unsigned int textSize = std::stoi(args[6]);
                         sf::View view = sf::View(sf::FloatRect(0, 0, 1280, 720));
                         _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, size), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}), View(view, {1280, 720}));
-                        _entities[id + 1] = GameEngine::Entity(id + 1, Text(name, "font/Inter_Bold.ttf", textSize), Position({{pos.first + size + 30, pos.second + size + 30}}), Link(id));
+                        _entities[id + 1] = GameEngine::Entity(id + 1, Text(name, "font/Inter_Bold.ttf", textSize), Position({{pos.first + size + 30, pos.second + size + 30}}));
+                        _entities[1000] = GameEngine::Entity(1000, Text("Score: 0", "font/Inter_Bold.ttf", 30), Position({{pos.first - 570, pos.second + 330}}), Link(id));
                     }
                 }
                 if (line.compare(0, 1, "3") == 0) {
@@ -186,13 +187,14 @@ void Network::handleSelect(std::pair<float, float> direction) {
                 if (line.compare(0, 1, "7") == 0) {
                     std::cout << "Remove Food" << std::endl;
                     std::vector<std::string> args = splitString(line, ' ');
-                    if (args.size() == 8) {
+                    if (args.size() == 9) {
                         int foodId = std::stoi(args[1]);
                         int id = std::stoi(args[2]);
                         std::pair<float, float> pos = {std::stof(args[3]), std::stof(args[4])};
                         int clientId = std::stoi(args[5]);
                         float size = std::stoi(args[6]);
                         unsigned int textSize = std::stoi(args[7]);
+                        int score = std::stoi(args[8]);
                         if (_entities.find(id) != _entities.end()) {
                             _entities[id].getComponent<Position>().removePosition(pos);
                             system.update(clientId, _entities, GameEngine::UpdateType::CircleRadius, size);
@@ -209,6 +211,9 @@ void Network::handleSelect(std::pair<float, float> direction) {
                                     V0.second * std::pow(playerSize / S0, alpha)
                                 };
                                 system.update(clientId, _entities, GameEngine::UpdateType::View, newSize);
+                                std::pair<float, float> newScorePos = {_entities[1000].getComponent<Position>().getPositionX(0) - 25, _entities[1000].getComponent<Position>().getPositionY(0) + 24};
+                                system.update(1000, _entities, GameEngine::UpdateType::Position, std::pair<float, float>(newScorePos));
+                                system.update(1000, _entities, GameEngine::UpdateType::Text, "Score: " + std::to_string(score));
                             }
                         }
                     }
