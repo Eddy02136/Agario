@@ -71,7 +71,7 @@ void Protocol::create_player_callback(int id, std::map<int, Client>& clients, Sm
                 << static_cast<int16_t>(client->second.getPosition().first)
                 << static_cast<int16_t>(client->second.getPosition().second)
                 << static_cast<int16_t>(client->second.getSize())
-                << static_cast<int16_t>(client->second.getTextSize());
+                << static_cast<unsigned int>(client->second.getTextSize());
     Server::get().sendToClient(client->second.getSocket(), smartBuffer);
 }
 
@@ -87,7 +87,7 @@ void Protocol::create_player_broadcast(int id, std::map<int, Client>& clients, S
                         << static_cast<int16_t>(tmpClient.second.getPosition().first)
                         << static_cast<int16_t>(tmpClient.second.getPosition().second)
                         << static_cast<int16_t>(tmpClient.second.getSize())
-                        << static_cast<int16_t>(tmpClient.second.getTextSize());
+                        << static_cast<unsigned int>(tmpClient.second.getTextSize());
             Server::get().sendToClient(client->second.getSocket(), smartBuffer);
             smartBuffer.reset();
         }
@@ -101,7 +101,7 @@ void Protocol::create_player_broadcast(int id, std::map<int, Client>& clients, S
                 << static_cast<int16_t>(pos.first)
                 << static_cast<int16_t>(pos.second)
                 << static_cast<int16_t>(size)
-                << static_cast<int16_t>(client->second.getTextSize());
+                << static_cast<unsigned int>(client->second.getTextSize());
     Server::get().sendToAllClientsExcept(id, smartBuffer);
 }
 

@@ -67,7 +67,7 @@ void Network::createPlayerCallback(SmartBuffer &SmartBuffer) {
     sf::View view = sf::View(sf::FloatRect(0, 0, 1280, 720));
     std::pair<float, float> pos = {x, y};
     _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, size), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}), View(view, {1280, 720}));
-    _entities[id + 1] = GameEngine::Entity(id + 1, Text(name, "font/Inter_Bold.ttf", textSize), Position({{pos.first + size + 30, pos.second + size + 30}}), Link(id));
+    _entities[id + 1] = GameEngine::Entity(id + 1, Text(name, "font/Inter_Bold.ttf", 30), Position({{pos.first, pos.second}}), Link(id));
 }
 
 void Network::updatePosition(SmartBuffer &smartBuffer) {
@@ -76,7 +76,8 @@ void Network::updatePosition(SmartBuffer &smartBuffer) {
     smartBuffer >> id >> x >> y;
     std::pair<float, float> pos = {x, y};
     GameEngine::System system;
-    system.update(id, _entities, GameEngine::UpdateType::Position, pos);
+    system.update(id, _entities, GameEngine::UpdateType::Position, pos); 
+    //system.update(id + 1, _entities, GameEngine::UpdateType::Position, pos, 0);
 }
 
 void Network::createMap(SmartBuffer &smartBuffer) {
@@ -103,7 +104,7 @@ void Network::createPlayerBroadcast(SmartBuffer &SmartBuffer) {
     SmartBuffer >> id >> name >> x >> y >> size >> textSize;
     std::pair<float, float> pos = {x, y};
     _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, size), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}));
-    _entities[id + 1] = GameEngine::Entity(id + 1, Text(name, "font/Inter_Bold.ttf", textSize), Position({{pos.first + size + 30, pos.second + size + 30}}), Link(id));
+    _entities[id + 1] = GameEngine::Entity(id + 1, Text(name, "font/Inter_Bold.ttf", 30), Position({{pos.first, pos.second}}), Link(id));
 }
 
 void Network::eatFood(SmartBuffer &smartBuffer) {
@@ -116,7 +117,9 @@ void Network::eatFood(SmartBuffer &smartBuffer) {
         std::pair<float, float> pos = {x, y};
         _entities[mapId].getComponent<Position>().removePosition(pos);
         system.update(clientId, _entities, GameEngine::UpdateType::CircleRadius, size);
-        //system.update(clientId + 1, _entities, GameEngine::UpdateType::TextSize, textSize);
+        if (textSize > 0) {
+            system.update(clientId + 1, _entities, GameEngine::UpdateType::TextSize, textSize);
+        }
         if (_entities[clientId].hasComponent<View>()) {
             auto &viewComp = _entities[clientId].getComponent<View>();
             std::pair<float, float> viewSize = viewComp.getSize();
