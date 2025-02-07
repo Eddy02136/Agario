@@ -137,7 +137,7 @@ void Network::eatFood(SmartBuffer &smartBuffer) {
               pos.second + 10.0f
             };
             system.update(1000, _entities, GameEngine::UpdateType::Position, newScorePos, 0);                                
-            system.update(1000, _entities, GameEngine::UpdateType::Text, "Score: " + std::to_string(score));
+            //system.update(1000, _entities, GameEngine::UpdateType::Text, "Score: " + std::to_string(score));
         }
     }
 }
