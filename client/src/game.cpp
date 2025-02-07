@@ -50,7 +50,6 @@ void Game::gameManager() {
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed) {
                 window.close();
-                _isConnected = false;
                 _stopNetworkThread = true;
                 if (_networkThread.joinable()) {
                     _networkThread.join();

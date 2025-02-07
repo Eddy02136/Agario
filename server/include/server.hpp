@@ -29,16 +29,13 @@ class Server {
     void sendToAllClientsExcept(int client_id, SmartBuffer &smartBuffer);
     void handle_client(int id, int clientSocket);
     fd_set& getRds();
-    fd_set& getWds();
   private:
     Server();
     ~Server();
     std::map<int, Client> _clients;
     int _tcpSocket = -1;
-    char _key = 0xA3;
     int id = 0;
     fd_set rfds;
-    fd_set wfds;
     sockaddr_in _tcpAddr{};
     std::mutex _clientMutex;
 };

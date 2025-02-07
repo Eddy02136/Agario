@@ -31,10 +31,6 @@ fd_set& Server::getRds() {
     return this->rfds;
 }
 
-fd_set& Server::getWds() {
-    return this->wfds;
-}
-
 void Server::init() {
     int opt = 1;
 
@@ -54,9 +50,7 @@ void Server::init() {
     }
 
     FD_ZERO(&this->rfds);
-    FD_ZERO(&this->wfds);
     FD_SET(this->_tcpSocket, &this->rfds);
-    FD_SET(this->_tcpSocket, &this->wfds);
 
     std::cout << "[TCP Socket] Successfully initialized." << std::endl;
     Map::get().createMap(this->id);
@@ -66,14 +60,11 @@ void Server::init() {
 
 void Server::manage_file_descriptors() {
     FD_ZERO(&this->rfds);
-    FD_ZERO(&this->wfds);
     FD_SET(this->_tcpSocket, &this->rfds);
-    FD_SET(this->_tcpSocket, &this->wfds);
     std::lock_guard<std::mutex> lock(_clientMutex);
     for (auto &client : this->_clients) {
         if (client.second.getSocket() != FAILURE) {
             FD_SET(client.second.getSocket(), &this->rfds);
-            FD_SET(client.second.getSocket(), &this->wfds);
         }
     }
 }
@@ -108,12 +99,12 @@ void Server::sendToAllClientsExcept(int client_id, SmartBuffer &smartBuffer) {
 }
 
 void Server::add_client() {
-    SmartBuffer smartBuffer;
     int client_socket = accept(this->_tcpSocket, NULL, NULL);
     if (client_socket < 0) {
         std::cerr << "[Server] Failed to accept new client." << std::endl;
         return;
     }
+    std::cout << "[Server] New client socket accepted: " << client_socket << std::endl;
     Client new_client(client_socket);
     std::lock_guard<std::mutex> lock(_clientMutex);
     this->_clients.insert({this->id, new_client});
@@ -131,15 +122,16 @@ void Server::handle_client(int id, int clientSocket) {
                 char buffer[DEFAULT_BYTES] = {};
 
                 const ssize_t bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
-                if (bytesRead <= SUCCESS) {
-                    std::cout << "[TCP Socket] Client disconnected: " +
-                           std::to_string(clientSocket) << std::endl;
-                    FD_CLR(clientSocket, &this->rfds);
-                    FD_CLR(clientSocket, &this->wfds);
-                    ::close(clientSocket);
+                if (bytesRead <= 0) {
+                    std::cerr << "[TCP Socket] Client disconnected: " << id << std::endl;
                     std::lock_guard<std::mutex> lock(_clientMutex);
-                    this->_clients.erase(id);
-                    break;
+                    if (_clients.find(id) != _clients.end()) {
+                        _clients.erase(id);
+                    }
+                    FD_CLR(clientSocket, &this->rfds);
+                    shutdown(clientSocket, SHUT_RDWR);
+                    ::close(clientSocket);
+                    return;
                 }
                 smartBuffer.reset();
                 smartBuffer.inject(reinterpret_cast<uint8_t*>(buffer), bytesRead);
@@ -156,7 +148,7 @@ void Server::run() {
     while (true) {
         try {
             manage_file_descriptors();
-            result = select(FD_SETSIZE, &this->rfds, &this->wfds, NULL, NULL);
+            result = select(FD_SETSIZE, &this->rfds, NULL, NULL, NULL);
             if (result < SUCCESS) {
                 throw std::runtime_error("Select failed.");
             }
@@ -165,7 +157,6 @@ void Server::run() {
             }
         } catch (const std::exception &e) {
             std::cerr << e.what() << std::endl;
-            std::cout << "[Server] Shutting down." << std::endl;
             return;
         }
     }

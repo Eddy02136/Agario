@@ -240,7 +240,6 @@ void Protocol::handle_message(int id, int clientSocket, std::map<int, Client>& c
             break;
 
         default:
-            std::cerr << "[Protocol] Unknown OpCode received: " << opCode << std::endl;
             break;
         }
 
