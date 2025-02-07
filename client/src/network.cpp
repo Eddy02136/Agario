@@ -117,9 +117,9 @@ void Network::eatFood(SmartBuffer &smartBuffer) {
         std::pair<float, float> pos = {x, y};
         _entities[mapId].getComponent<Position>().removePosition(pos);
         system.update(clientId, _entities, GameEngine::UpdateType::CircleRadius, size);
-        if (textSize > 0) {
+        /*if (textSize > 0) {
             system.update(clientId + 1, _entities, GameEngine::UpdateType::TextSize, textSize);
-        }
+        }*/
         if (_entities[clientId].hasComponent<View>()) {
             auto &viewComp = _entities[clientId].getComponent<View>();
             std::pair<float, float> viewSize = viewComp.getSize();
