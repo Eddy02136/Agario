@@ -132,7 +132,7 @@ void Network::handleSelect(std::pair<float, float> direction) {
                         sf::View view = sf::View(sf::FloatRect(0, 0, 1280, 720));
                         _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, size), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}), View(view, {1280, 720}));
                         _entities[id + 1] = GameEngine::Entity(id + 1, Text(name, "font/Inter_Bold.ttf", textSize), Position({{pos.first + size + 30, pos.second + size + 30}}));
-                        _entities[1000] = GameEngine::Entity(1000, Text("Score: 0", "font/Inter_Bold.ttf", 30), Position({{pos.first - 570, pos.second + 330}}), Link(id));
+                        _entities[1000] = GameEngine::Entity(1000, Text("Score: 0", "font/Inter_Bold.ttf", 30), Position({{pos.first, pos.second}}));
                     }
                 }
                 if (line.compare(0, 1, "3") == 0) {
@@ -158,6 +158,8 @@ void Network::handleSelect(std::pair<float, float> direction) {
                         system.update(id, _entities, GameEngine::UpdateType::Position, pos, 0);
                         std::pair<float, float> newPos = {pos.first + size, pos.second + size};
                         system.update(id + 1, _entities, GameEngine::UpdateType::Position, newPos, 0);
+                        newPos = {pos.first + size, pos.second + size};
+                        system.update(1000, _entities, GameEngine::UpdateType::Position, newPos, 0);
                     }
                 }
                 if (line.compare(0, 1, "5") == 0) {
@@ -204,15 +206,19 @@ void Network::handleSelect(std::pair<float, float> direction) {
                                 std::pair<float, float> viewSize = viewComp.getSize();
                                 float playerSize = size;
                                 const std::pair<float, float> V0 = {1280.0f, 720.0f};
-                                const float S0 = 30.0f;
-                                const float alpha = 0.6f;
+                                const float S0 = 60.0f;
+                                const float alpha = 1.2f;
                                 std::pair<float, float> newSize = {
                                     V0.first * std::pow(playerSize / S0, alpha),
                                     V0.second * std::pow(playerSize / S0, alpha)
                                 };
                                 system.update(clientId, _entities, GameEngine::UpdateType::View, newSize);
-                                std::pair<float, float> newScorePos = {_entities[1000].getComponent<Position>().getPositionX(0) - 25, _entities[1000].getComponent<Position>().getPositionY(0) + 24};
-                                system.update(1000, _entities, GameEngine::UpdateType::Position, std::pair<float, float>(newScorePos));
+                                //std::pair<float, float> newScorePos = {_entities[1000].getComponent<Position>().getPositionX(0) - 25, _entities[1000].getComponent<Position>().getPositionY(0) + 24};
+                                std::pair<float, float> newScorePos = {
+                                    pos.first + 10.0f,
+                                    pos.second + 10.0f
+                                };
+                                system.update(1000, _entities, GameEngine::UpdateType::Position, newScorePos, 0);                                
                                 system.update(1000, _entities, GameEngine::UpdateType::Text, "Score: " + std::to_string(score));
                             }
                         }
