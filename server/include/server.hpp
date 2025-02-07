@@ -25,6 +25,8 @@ class Server {
     std::string receiveFromClient(int clientSocket);
     void serialize ( const std::string &str, std::ostream &out, char key);
     std::string deserialize(std::istream &in, char key);
+    void setId(int id);
+    int getId();
     void sendToAllClients(SmartBuffer &smartBuffer);
     void sendToAllClientsExcept(int client_id, SmartBuffer &smartBuffer);
     void handle_client(int id, int clientSocket);

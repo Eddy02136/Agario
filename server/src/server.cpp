@@ -31,6 +31,14 @@ fd_set& Server::getRds() {
     return this->rfds;
 }
 
+int Server::getId() {
+    return this->id;
+}
+
+void Server::setId(int id) {
+    this->id = id;
+}
+
 void Server::init() {
     int opt = 1;
 

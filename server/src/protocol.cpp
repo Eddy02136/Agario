@@ -119,7 +119,8 @@ void Protocol::check_food_collision(int clientId, const std::pair<float, float>&
         float distance = std::sqrt(dx * dx + dy * dy);
 
         if (distance <= (clientRadius)) {
-            client.setSize(client.getSize() + 1);
+            float newSize = client.getSize() + (1.0f / std::sqrt(client.getSize()));
+            client.setSize(newSize);
             client.setTextSize(client.getSize() + 40);
             smartBuffer << static_cast<int16_t>(OpCode::REMOVE_FOOD)
                         << static_cast<int16_t>(foodId)
