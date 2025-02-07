@@ -8,20 +8,17 @@
 6. [Language comparison](./language-comparison.md)
 
 7. [Client](./client/client.md)
-     - [Entity Manager](./client/entityManager.md)
-     - [Hotkeys Manager](./client/hotkey/HotkeysManager.md)
+     - [Network](./client/network/network.md)
+          - [Protocol](./client/network/protocol.md)
+     - [Menu](./client/menu.md)
+     - [Game](./client/game.md)
 
-8. [Menu](./client/menu.md)
-
-9. [Network Client](./client/network/network.md)
-10. [Protocol](./client/network/protocol.md)
-
-11. [ECS](./ecs/ecs.md)
-     - [Components](./ecs/components.md)
+8. [ECS](./ecs/ecs.md)
      - [Entity](./ecs/entity.md)
-     - [Systems](./ecs/entity.md)
+     - [Components](./ecs/components.md)
+     - [Systems](./ecs/systems.md)
 
-12. [Network](./server/network.md)
+9. [Server](./server/network.md)
      - [Miscellaneous](./server/misc.md)
      - [Protocol](./server/protocol.md)
      - [Smart Buffer](./server/smartbuffer.md)

@@ -1,7 +1,7 @@
 
-# Comparison of Graphics Libraries for R-Type
+# Comparison of Graphics Libraries for Agario
 
-This document compares three major graphics libraries: **Raylib**, **SFML**, and **SDL**, based on their usability, performance, features, and documentation. It also explains why **SFML** was chosen for the R-Type project.
+This document compares three major graphics libraries: **Raylib**, **SFML**, and **SDL**, based on their usability, performance, features, and documentation. It also explains why **SFML** was chosen for the Agario project.
 
 ---
 
@@ -20,7 +20,7 @@ This document compares three major graphics libraries: **Raylib**, **SFML**, and
 ## Why We Chose SFML
 
 We chose to use **SFML** for the following reasons:
-1. **Adequate performance**: SFML is optimized for 2D games like R-Type and provides performance suitable for the project’s needs.
+1. **Adequate performance**: SFML is optimized for 2D games like Agario and provides performance suitable for the project’s needs.
 2. **Ease of use**: Its simplicity allows faster development and debugging, which is crucial for meeting project deadlines.
 3. **Past experience**: We have previously worked with SFML during our studies, reducing the learning curve.
 4. **Quality documentation**: SFML offers clear documentation along with practical tutorials, speeding up development.

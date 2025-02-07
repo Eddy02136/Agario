@@ -1,7 +1,7 @@
 
-# Comparison of Programming Languages for R-Type Development
+# Comparison of Programming Languages for Agario Development
 
-To undertake an ambitious project like **R-Type**, it is crucial to choose a programming language that meets the technical requirements of the game and the project’s objectives. Key criteria include performance, resource management, flexibility for working with graphics and network libraries, and ease of development.
+To undertake an ambitious project like **Agario**, it is crucial to choose a programming language that meets the technical requirements of the game and the project’s objectives. Key criteria include performance, resource management, flexibility for working with graphics and network libraries, and ease of development.
 
 ---
 
@@ -16,8 +16,8 @@ To undertake an ambitious project like **R-Type**, it is crucial to choose a pro
 - **Complexity**: C++ can be harder to learn and master, particularly for manual memory management.
 - **Development time**: Compared to more modern languages, C++ development may take longer, though this is offset by control and performance.
 
-**For R-Type:**
-C++ is particularly suited for games requiring fine-tuned performance and resource management, both critical for a project like R-Type.
+**For Agario:**
+C++ is particularly suited for games requiring fine-tuned performance and resource management, both critical for a project like Agario.
 
 ---
 
@@ -32,7 +32,7 @@ C++ is particularly suited for games requiring fine-tuned performance and resour
 - **Lower performance**: While performant, C# relies on the CLR (Common Language Runtime), introducing slight latency.
 - **Dependency on frameworks**: C#’s full potential often relies on tools like Unity, which can limit customization options.
 
-**For R-Type:**
+**For Agario:**
 C# is ideal for rapid development, but it may reach its limits in terms of performance for a game requiring ultra-optimized execution.
 
 ---
@@ -47,7 +47,7 @@ C# is ideal for rapid development, but it may reach its limits in terms of perfo
 - **Limited performance**: Python is an interpreted language, making it unsuitable for games requiring intensive calculations or real-time responsiveness.
 - **Abstract memory management**: Garbage collection can cause unpredictable slowdowns.
 
-**For R-Type:**
+**For Agario:**
 Python is a good choice for prototyping or simple games, but it is not suitable for a final version requiring consistent performance.
 
 ---
@@ -63,7 +63,7 @@ Python is a good choice for prototyping or simple games, but it is not suitable 
 - **Steep learning curve**: Rust takes time to fully grasp.
 - **Limited ecosystem**: Rust has fewer libraries dedicated to game development compared to C++.
 
-**For R-Type:**
+**For Agario:**
 Rust is an interesting option for a project focused on safety and performance, but its young ecosystem can complicate development.
 
 ---
@@ -78,11 +78,11 @@ Rust is an interesting option for a project focused on safety and performance, b
 - **Lower performance**: The JVM introduces latency, making Java less performant for complex real-time games.
 - **Limited graphics libraries**: While solutions like LWJGL exist, they are less powerful than those available in C++.
 
-**For R-Type:**
-Java can be suitable for a basic 2D game, but its performance limitations and less rich ecosystem make it less fitting for a demanding project like R-Type.
+**For Agario:**
+Java can be suitable for a basic 2D game, but its performance limitations and less rich ecosystem make it less fitting for a demanding project like Agario.
 
 ---
 
 ## Conclusion
 
-To recreate R-Type, a game demanding fluidity, optimization, and precise resource management, **C++ emerges as the most suitable choice**. Its combination of raw performance, flexibility, and a rich ecosystem places it above other options. While C# and Rust offer compelling alternatives, they cannot match the level of control and efficiency that C++ provides.
+To recreate Agario, a game demanding fluidity, optimization, and precise resource management, **C++ emerges as the most suitable choice**. Its combination of raw performance, flexibility, and a rich ecosystem places it above other options. While C# and Rust offer compelling alternatives, they cannot match the level of control and efficiency that C++ provides.

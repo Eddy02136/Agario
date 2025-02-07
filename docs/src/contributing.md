@@ -1,7 +1,7 @@
 
-# Commit Standard for R-Type
+# Commit Standard for Agario
 
-This document outlines the commit standard applied on R-Type project. This convention ensures clear and structured messages for better readability and code management.
+This document outlines the commit standard applied on Agario project. This convention ensures clear and structured messages for better readability and code management.
 
 ---
 
