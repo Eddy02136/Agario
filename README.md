@@ -12,6 +12,7 @@ Inspired by the classic multiplayer arcade genre, players control a cell that gr
 -   [Prerequisites](#Prerequisites)
 -   [Run the game](#run-the-game)
 -   [Project structure](#project-structure)
+-   [Documentation](#documentation)
 
 ---
 
@@ -79,3 +80,21 @@ Before getting started, make sure you have the following installed on your machi
 
 `server/`: Handles server-side networking.
 
+## Documentation
+
+To access the project documentation, use `mdbook`.
+
+1. Navigate to the `docs/` directory:
+    ```bash
+    cd docs
+    ```
+2. Start the documentation server:
+    ```bash
+    mdbook serve
+    ```
+3. Open your browser and go to:
+    ```
+    http://localhost:3000
+    ```
+
+This will provide an interactive version of the documentation accessible from your web browser.

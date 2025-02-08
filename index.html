@@ -162,6 +162,7 @@ Inspired by the classic multiplayer arcade genre, players control a cell that gr
 <li><a href="#Prerequisites">Prerequisites</a></li>
 <li><a href="#run-the-game">Run the game</a></li>
 <li><a href="#project-structure">Project structure</a></li>
+<li><a href="#documentation">Documentation</a></li>
 </ul>
 <hr />
 <h2 id="prerequisites"><a class="header" href="#prerequisites">Prerequisites</a></h2>
@@ -216,6 +217,24 @@ make
 <p><code>external/</code>: External library needed.</p>
 <p><code>game_engine/</code>: Handles server-side game_engine.</p>
 <p><code>server/</code>: Handles server-side networking.</p>
+<hr />
+<h2 id="documentation"><a class="header" href="#documentation">Documentation</a></h2>
+<p>To access the project documentation, use <code>mdbook</code>.</p>
+<ol>
+<li>Navigate to the <code>docs/</code> directory:
+<pre><code class="language-bash">cd docs
+</code></pre>
+</li>
+<li>Start the documentation server:
+<pre><code class="language-bash">mdbook serve
+</code></pre>
+</li>
+<li>Open your browser and go to:
+<pre><code>http://localhost:3000
+</code></pre>
+</li>
+</ol>
+<p>This will provide an interactive version of the documentation accessible from your web browser.</p>
 
                     </main>
 
