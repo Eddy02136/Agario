@@ -11,8 +11,8 @@ Inspired by the classic multiplayer arcade genre, players control a cell that gr
 
 -   [Prerequisites](#Prerequisites)
 -   [Run the game](#run-the-game)
--   [Project structure](#project-structure)
 -   [Documentation](#documentation)
+-   [Project structure](#project-structure)
 
 ---
 
@@ -66,27 +66,39 @@ Before getting started, make sure you have the following installed on your machi
     ```bash
     ./build/client/Client
     ```
+
 ---
-
-## Project structure
-
-`font/`: Text font.
-
-`client/`: Contains the client-side game logic and graphics.
-
-`external/`: External library needed.
-
-`game_engine/`: Handles server-side game_engine.
-
-`server/`: Handles server-side networking.
 
 ## Documentation
 
 To access the project documentation, use `mdbook`.
 
-1. Navigate to the `docs/` directory:
+### Installing `mdbook` on Ubuntu
+
+1. Install `cargo` (if not already installed):
     ```bash
-    cd docs
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+    ```
+    Then reload your shell:
+    ```bash
+    source $HOME/.cargo/env
+    ```
+
+2. Install `mdbook`:
+    ```bash
+    cargo install mdbook
+    ```
+
+3. Verify the installation:
+    ```bash
+    mdbook --version
+    ```
+
+### Running the documentation server
+
+1. Navigate to the `doc/` directory:
+    ```bash
+    cd doc
     ```
 2. Start the documentation server:
     ```bash
@@ -98,3 +110,19 @@ To access the project documentation, use `mdbook`.
     ```
 
 This will provide an interactive version of the documentation accessible from your web browser.
+
+---
+
+## Project structure
+
+`client/`: Contains the client-side game logic and graphics.
+
+`docs/`: Contains the project documentation.
+
+`external/`: External library needed.
+
+`font/`: Text font.
+
+`game_engine/`: Handles server-side game_engine.
+
+`server/`: Handles server-side networking.
