@@ -12,7 +12,6 @@ class Game {
         static Game& get();
 
         void gameManager();
-        std::pair<float, float> handlePlayerMovement(sf::RenderWindow& window, std::pair<float, float>& playerPosition);
         std::string getUsername();
         void setUsername(std::string username);
         void networkThread(Network &network);

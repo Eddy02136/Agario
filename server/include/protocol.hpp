@@ -30,7 +30,4 @@ class Protocol {
         void handle_message(int id, int clientSocket, std::map<int, Client>& clients, SmartBuffer& smartBuffer);
         void check_food_collision(int clientId, const std::pair<float, float>& clientPos, Client& client, SmartBuffer& smartBuffer);
         void check_player_collision(int clientId, std::map<int, Client>& clients, SmartBuffer& smartBuffer);
-
-    private:
-        std::string _buffer;
 };

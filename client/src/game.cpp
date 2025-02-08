@@ -3,6 +3,7 @@
 #include <thread>
 #include <atomic>
 #include "System.hpp"
+#include "clientProtocol.hpp"
 #include "game.hpp"
 #include "menu.hpp"
 
@@ -20,7 +21,18 @@ static std::pair<float, float> normalize(const std::pair<float, float>& vector) 
     return {0, 0};
 }
 
-std::atomic<bool> _stopNetworkThread{false};
+static std::pair<float, float> handlePlayerMovement(sf::RenderWindow& window) {
+    sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
+    std::pair<float, float> playerPosition(640.0f, 360.0f);
+
+    std::pair<float, float> targetPosition(static_cast<float>(mousePosition.x), static_cast<float>(mousePosition.y));
+
+    std::pair<float, float> direction = { targetPosition.first - playerPosition.first, targetPosition.second - playerPosition.second };
+    std::pair<float, float> normalizedDirection = normalize(direction);
+    return normalizedDirection;
+}
+
+static std::atomic<bool> _stopNetworkThread{false};
 
 void Game::networkThread(Network &network)
 {
@@ -29,7 +41,7 @@ void Game::networkThread(Network &network)
             throw std::runtime_error("Failed to connect to server");
         }
         while (!_stopNetworkThread) {
-            network.handleSelect(_direction);
+            network.handleMessages(_direction);
         }
     } catch (const std::exception &e) {
         std::cerr << "Network error: " << e.what() << std::endl;
@@ -41,7 +53,6 @@ void Game::gameManager() {
     Network network;
     Menu menu;
     GameEngine::System system;
-    std::pair<float, float> playerPosition(640.0f, 360.0f);
     std::pair<float, float> direction(0.0f, 0.0f);
 
     while (window.isOpen()) {
@@ -73,8 +84,8 @@ void Game::gameManager() {
 
                 _networkThread = std::thread(&Game::networkThread, this, std::ref(network));
             }
-            std::map<int, GameEngine::Entity> entities = network.getEntities();
-            _direction = handlePlayerMovement(window, playerPosition);
+            std::map<int, GameEngine::Entity> entities = Protocol::get().getEntities();
+            _direction = handlePlayerMovement(window);
             system.render(window, entities);
         }
         window.display();
@@ -84,16 +95,6 @@ void Game::gameManager() {
     if (_networkThread.joinable()) {
         _networkThread.join();
     }
-}
-
-std::pair<float, float> Game::handlePlayerMovement(sf::RenderWindow& window, std::pair<float, float>& playerPosition) {
-    sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
-
-    std::pair<float, float> targetPosition(static_cast<float>(mousePosition.x), static_cast<float>(mousePosition.y));
-
-    std::pair<float, float> direction = { targetPosition.first - playerPosition.first, targetPosition.second - playerPosition.second };
-    std::pair<float, float> normalizedDirection = normalize(direction);
-    return normalizedDirection;
 }
 
 std::string Game::getUsername() {
