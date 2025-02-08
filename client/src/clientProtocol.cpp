@@ -6,6 +6,7 @@
 #include <components/Text.hpp>
 #include <components/Link.hpp>
 #include <System.hpp>
+#include <cmath>
 #include <clientProtocol.hpp>
 
 Protocol::Protocol() {}
