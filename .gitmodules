@@ -1,3 +1,6 @@
 [submodule "external/SFML"]
 	path = external/SFML
 	url = git@github.com:SFML/SFML.git
+[submodule "external/smart-buffer-cpp"]
+	path = external/smart-buffer-cpp
+	url = git@github.com:fohz67/smart-buffer-cpp.git

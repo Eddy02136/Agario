@@ -13,13 +13,13 @@ class Position : public Component {
     Position(const std::vector<std::pair<float, float>>& positions = {
                  {0.0f, 0.0f}});
     ~Position();
-    std::vector<std::pair<float, float>> getPositions() const;
+    const std::vector<std::pair<float, float>>& getPositions() const;
     float getPositionX(int id) const;
     void setPositionX(int id, float x);
     float getPositionY(int id) const;
     void setPositionY(int id, float y);
     void addPosition(float x, float y);
-    void removePosition(int id);
+    void removePosition(std::pair<float, float> pos);
     void display() const override;
 
   private:

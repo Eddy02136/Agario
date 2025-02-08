@@ -2,27 +2,23 @@
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/ioctl.h>
 #include <unistd.h>
 #include <sstream>
 #include <components/Shape.hpp>
 #include <components/Color.hpp>
 #include <components/Position.hpp>
+#include <components/View.hpp>
+#include <components/Text.hpp>
+#include <components/Link.hpp>
+#include <cmath>
+#include <clientProtocol.hpp>
 #include "System.hpp"
 #include "network.hpp"
 
 Network::Network() : _ip("127.0.0.1"), _port(8080) {}
 
-static std::vector<std::string> splitString(const std::string &data, const char delimiter) {
-    std::stringstream str(data);
-    std::string line;
-    std::vector<std::string> result;
-    while (std::getline(str, line, delimiter)) {
-        result.push_back(line);
-    }
-    return result;
-}
-
-void Network::connectToServer() {
+void Network::connectToServer(std::string &name) {
     struct sockaddr_in server;
     _socket = -1;
 
@@ -36,58 +32,28 @@ void Network::connectToServer() {
     if (connect(_socket, (struct sockaddr *)&server, sizeof(server)) < 0) {
         throw std::runtime_error("Failed to connect to server");
     }
-    std::string name = "Guest";
-    std::string data = "1 " + name + " " + "\n";
-    //std::ostringstream out;
-    //serialize(data, out, _key);
-    send(_socket, data.c_str(), data.size(), 0);
+    if (name.empty()) {
+        name = "Guest";
+    }
+    SmartBuffer smartBuffer;
+    smartBuffer << static_cast<int16_t>(Protocol::CREATE_PLAYER);
+    smartBuffer << name;
+    sendData(smartBuffer);
 }
 
-std::map<int, GameEngine::Entity> Network::getEntities() const {
-    return _entities;
+int Network::getSocket() const {
+    return _socket;
 }
 
-void Network::serialize (
-    const std::string &str, std::ostream &out, char key)
-{
-    size_t size = str.size();
-    out.write(reinterpret_cast<const char *>(&size), sizeof(size));
-
-    std::vector<char> buffer(str.begin(), str.end());
-    for (size_t i = 0; i < size; i++) {
-        buffer.data()[i] ^= key;
-    }
-    out.write(buffer.data(), static_cast<std::streamsize>(size));
-}
-
-std::string Network::deserialize(std::istream &in, char key) {
-    size_t size = 0;
-    in.clear();
-
-    if (!in.read(reinterpret_cast<char *>(&size), sizeof(size))) {
-        return "";
-    }
-
-    if (size > static_cast<size_t>(in.rdbuf()->in_avail())) {
-        return "";
-    }
-    std::vector<char> buffer(size);
-    in.read(buffer.data(), static_cast<std::streamsize>(size));
-    std::cout << "Buffer: " << std::string(buffer.begin(), buffer.end()) << std::endl;
-    for (size_t i = 0; i < size; i++) {
-        buffer[i] ^= key;
-    }
-    return std::string(buffer.begin(), buffer.end());
-}
-
-void Network::handleSelect(std::pair<float, float> direction) {
+void Network::handleMessages(std::pair<float, float> direction) {
     fd_set readfds;
     fd_set writefds;
     GameEngine::System system;
-    struct timeval timeout;
-    timeout.tv_sec = 1;
-    timeout.tv_usec = 500000;
     int ret;
+    SmartBuffer smartBuffer;
+    struct timeval timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 10000;
 
     FD_ZERO(&readfds);
     FD_ZERO(&writefds);
@@ -99,96 +65,70 @@ void Network::handleSelect(std::pair<float, float> direction) {
     }
     if (ret) {
         if (FD_ISSET(_socket, &readfds)) {
-            std::string data = receiveData();
-            std::vector<std::string> datas = splitString(data, '\n');
-            if (_buffer.length() > 0) {
-                datas[0] = _buffer + datas[0];
-                _buffer.clear();
-            }
-            if (data[data.length() - 1] != '\n') {
-                _buffer = datas[datas.size() - 1];
-                datas.pop_back();
-            }
-            for (const auto &line : datas) {
-                if (line.empty()) {
-                    continue;
-                }
-                if (line.compare(0, 1, "2") == 0) {
-                    std::vector<std::string> args = splitString(line, ' ');
-                    std::cout << "Callback" << std::endl;
-                    if (args.size() == 4) {
-                        int id = std::stoi(args[1]);
-                        std::pair<float, float> pos = {std::stof(args[2]), std::stof(args[3])};
-                        _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, 30), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}));
-                    }
-                }
-                if (line.compare(0, 1, "3") == 0) {
-                    std::cout << "Broadcast" << std::endl;
-                    std::vector<std::string> args = splitString(line, ' ');
-                    if (args.size() == 4) {
-                        int id = std::stoi(args[1]);
-                        std::pair<float, float> pos = {std::stof(args[2]), std::stof(args[3])};
-                        _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, 30), Color({133, 6, 6, 255}), Position({{pos.first, pos.second}}));
-                    }
-                }
-                if (line.compare(0, 1, "4") == 0) {
-                    std::cout << "Update Position" << std::endl;
-                    std::vector<std::string> args = splitString(line, ' ');
-                    if (args.size() == 4) {
-                        int id = std::stoi(args[1]);
-                        std::pair<float, float> pos = {std::stof(args[2]), std::stof(args[3])};
-                        system.update(id, _entities, GameEngine::UpdateType::Position, pos, 0);
-                    }
-                }
-                if (line.compare(0, 1, "5") == 0) {
-                    std::cout << "Create Map" << std::endl;
-                    std::vector<std::string> args = splitString(line, ' ');
-                    if (args.size() == 2) {
-                        int id = std::stoi(args[1]);
-                        _entities[id] = GameEngine::Entity(id, Shape(Circle, {0, 0}, 5), Color({173, 216, 230, 255}));
-                    }
-                }
-                if (line.compare(0, 1, "6") == 0) {
-                    std::cout << "Add Food" << std::endl;
-                    std::vector<std::string> args = splitString(line, ' ');
-                    if (args.size() == 4) {
-                        int id = std::stoi(args[1]);
-                        std::pair<float, float> pos = {std::stof(args[2]), std::stof(args[3])};
-                        if (_entities.find(id) != _entities.end()) {
-                            if (_entities[id].hasComponent<Position>()) {
-                                _entities[id].getComponent<Position>().addPosition(pos.first, pos.second);
-                            } else {
-                                _entities[id].addComponent(Position({{pos.first, pos.second}}));
-                            }
-                        }
-                    }
-                }
+            receiveData(smartBuffer);
+            int16_t opCode;
+            smartBuffer >> opCode;
+            switch(opCode) {
+                case Protocol::CREATE_PLAYER_CALLBACK:
+                    std::cout << "[Network] Create Player" << std::endl;
+                    Protocol::get().createPlayerCallback(smartBuffer);
+                    break;
+                
+                case Protocol::CREATE_PLAYER_BROADCAST:
+                    std::cout << "[Network] Create Player Broadcast" << std::endl;
+                    Protocol::get().createPlayerBroadcast(smartBuffer);
+                    break;
+                
+                case Protocol::UPDATE_POSITION:
+                    std::cout << "[Network] Update Position" << std::endl;
+                    Protocol::get().updatePosition(smartBuffer);
+                    break;
+
+                case Protocol::CREATE_MAP:
+                    std::cout << "[Network] Create Map" << std::endl;
+                    Protocol::get().createMap(smartBuffer);
+                    break;
+
+                case Protocol::ADD_FOOD:
+                    std::cout << "[Network] Add Food" << std::endl;
+                    Protocol::get().addFood(smartBuffer);
+                    break;
+
+                case Protocol::REMOVE_FOOD:
+                    std::cout << "[Network] Eat Food" << std::endl;
+                    Protocol::get().eatFood(smartBuffer);
+                    break;
+                    
+                default:
+                    std::cout << "[Network] Unknown operation code: " << opCode << std::endl;
+                    break;
             }
         }
         if (FD_ISSET(_socket, &writefds)) {
-            std::string data = "4 " + std::to_string(direction.first) + " " + std::to_string(direction.second) + "\n";
-            //std::ostringstream out;
-            //serialize(data, out, _key);
-            send(_socket, data.c_str(), data.size(), 0);
+            smartBuffer.reset();
+            smartBuffer << static_cast<int16_t>(4) << static_cast<float_t>(direction.first) << static_cast<float_t>(direction.second);
+            sendData(smartBuffer);
         }
     }
 }
 
-std::string Network::receiveData() {
-    char buffer[1024] = {0};
-    std::string data;
-    ssize_t bytesReceived = recv(_socket, buffer, sizeof(buffer) - 1, 0);
-    if (bytesReceived < 0) {
+void Network::receiveData(SmartBuffer &smartBuffer) {
+    uint32_t size;
+    if (recv(_socket, &size, sizeof(uint32_t), 0) <= 0) {
+        throw std::runtime_error("Failed to receive size");
+    }
+    std::vector<uint8_t> data(size);
+    if (recv(_socket, data.data(), size, 0) <= 0) {
         throw std::runtime_error("Failed to receive data");
     }
-    buffer[bytesReceived] = '\0';
-    std::cout << "Bytes received: " << bytesReceived << std::endl;
-    data = std::string(buffer, bytesReceived);
-    //std::istringstream in(data);
-    //std::cout << "Received: " << data << std::endl;
-    //data = deserialize(in, _key);
-    std::cout << "Deserialized: " << data << std::endl;
-    return data;
+    smartBuffer.reset();
+    smartBuffer.inject(data.data(), size);
+}
+
+void Network::sendData(SmartBuffer &smartBuffer) {
+    if (send(_socket, smartBuffer.getBuffer(), smartBuffer.getSize(), 0) <= 0) {
+        throw std::runtime_error("Failed to send data");
+    }
 }
 
 Network::~Network() {}

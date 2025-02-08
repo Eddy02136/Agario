@@ -3,19 +3,24 @@
 //
 
 #pragma once
+#include <thread>
+#include "network.hpp"
 
 class Game {
     public:
-        Game();
-        ~Game();
 
         static Game& get();
 
         void gameManager();
-        std::pair<float, float> handlePlayerMovement(sf::RenderWindow& window, std::pair<float, float>& playerPosition);
         std::string getUsername();
         void setUsername(std::string username);
+        void networkThread(Network &network);
     private:
+        Game();
+        ~Game();
         float _speed = 5.0f;
         std::string _username = "";
+        std::thread _networkThread;
+        std::pair<float, float> _direction;
+        bool _isConnected = false;
 };

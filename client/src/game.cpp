@@ -1,8 +1,9 @@
-
 #include <SFML/Graphics.hpp>
 #include <cmath>
-#include "network.hpp"
+#include <thread>
+#include <atomic>
 #include "System.hpp"
+#include "clientProtocol.hpp"
 #include "game.hpp"
 #include "menu.hpp"
 
@@ -16,52 +17,13 @@ Game& Game::get() {
 static std::pair<float, float> normalize(const std::pair<float, float>& vector) {
     float length = std::sqrt(vector.first * vector.first + vector.second * vector.second);
     if (length != 0)
-        return std::pair<float, float>(vector.first / length, vector.second / length);
-    return std::pair<float, float>(0, 0);
+        return {vector.first / length, vector.second / length};
+    return {0, 0};
 }
 
-void Game::gameManager() {
-    sf::RenderWindow window(sf::VideoMode(1280, 720), "Agario");
-    Network network;
-    Menu menu;
-    GameEngine::System system;
-    network.connectToServer();
-
-    std::pair<float, float> playerPosition(640.0f, 360.0f);
-    std::pair<float, float> direction(0.0f, 0.0f);
-
-    sf::View view(sf::FloatRect(0, 0, 1280, 720));
-    window.setView(view);
-
-    while (window.isOpen()) {
-        //network.handleSelect(direction);
-        window.clear();
-        sf::Event event;
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed)
-                window.close();
-            Menu::get().setupInput(event);
-        }
-        
-        if (!Menu::get().getIsPlayed()) {
-            Menu::get().displayMainMenu(window, system);
-        } else {
-            network.handleSelect(direction);
-        }
-
-        view.setCenter(playerPosition.first, playerPosition.second);
-        window.setView(view);
-
-        direction = handlePlayerMovement(window, playerPosition);
-
-        std::map<int, GameEngine::Entity> entities = network.getEntities();
-        system.render(window, entities);
-        window.display();
-    }
-}
-
-std::pair<float, float> Game::handlePlayerMovement(sf::RenderWindow& window, std::pair<float, float>& playerPosition) {
+static std::pair<float, float> handlePlayerMovement(sf::RenderWindow& window) {
     sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
+    std::pair<float, float> playerPosition(640.0f, 360.0f);
 
     std::pair<float, float> targetPosition(static_cast<float>(mousePosition.x), static_cast<float>(mousePosition.y));
 
@@ -70,13 +32,82 @@ std::pair<float, float> Game::handlePlayerMovement(sf::RenderWindow& window, std
     return normalizedDirection;
 }
 
+static std::atomic<bool> _stopNetworkThread{false};
+
+void Game::networkThread(Network &network)
+{
+    try {
+        if (network.getSocket() < 0) {
+            throw std::runtime_error("Failed to connect to server");
+        }
+        while (!_stopNetworkThread) {
+            network.handleMessages(_direction);
+        }
+    } catch (const std::exception &e) {
+        std::cerr << "Network error: " << e.what() << std::endl;
+    }
+}
+
+void Game::gameManager() {
+    sf::RenderWindow window(sf::VideoMode(1280, 720), "Agario");
+    Network network;
+    Menu menu;
+    GameEngine::System system;
+    std::pair<float, float> direction(0.0f, 0.0f);
+
+    while (window.isOpen()) {
+        window.clear();
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed) {
+                window.close();
+                _stopNetworkThread = true;
+                if (_networkThread.joinable()) {
+                    _networkThread.join();
+                }
+            }
+            Menu::get().setupInput(event);
+        }
+        
+        if (!Menu::get().getIsPlayed()) {
+            Menu::get().displayMainMenu(window, system);
+        } else {
+            if (!_isConnected) {
+                network.connectToServer(_username);
+                _isConnected = true;
+                _stopNetworkThread = false;
+
+                if (_networkThread.joinable()) {
+                    _stopNetworkThread = true;
+                    _networkThread.join();
+                }
+
+                _networkThread = std::thread(&Game::networkThread, this, std::ref(network));
+            }
+            std::map<int, GameEngine::Entity> entities = Protocol::get().getEntities();
+            _direction = handlePlayerMovement(window);
+            system.render(window, entities);
+        }
+        window.display();
+    }
+
+    _stopNetworkThread = true;
+    if (_networkThread.joinable()) {
+        _networkThread.join();
+    }
+}
 
 std::string Game::getUsername() {
     return this->_username;
 }
 
 void Game::setUsername(std::string username) {
-    _username = username;
+    _username = std::move(username);
 }
 
-Game::~Game() {}
+Game::~Game() {
+    _stopNetworkThread = true;
+    if (_networkThread.joinable()) {
+        _networkThread.join();
+    }
+}

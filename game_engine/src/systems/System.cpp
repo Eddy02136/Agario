@@ -32,6 +32,7 @@ void GameEngine::System::render(sf::RenderWindow& window,
         optionButtonSystem(window, entity);
         sliderSystem(window, entity, entities);
         shapeSystem(window, entity);
+        viewSystem(window, entity);
     }
 }
 

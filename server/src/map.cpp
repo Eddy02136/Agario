@@ -19,7 +19,7 @@ Map &Map::get() {
 
 void Map::createMap(int id) {
     _id = id;
-    int numCells = 100;
+    int numCells = 50;
     int cellWidth = _width / numCells;
     int cellHeight = _height / numCells;
 
