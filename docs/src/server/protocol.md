@@ -1,14 +1,13 @@
-# R-Type Protocol Documentation
+# Agario Protocol Documentation
 
-This document provides a detailed overview of the communication protocol for the R-Type server. It outlines the purpose, payload, and transmission method (TCP/UDP) for each operation code (OpCode). The protocol ensures consistent communication between the server and clients.
+This document provides a detailed overview of the communication protocol for the Agario server. It outlines the purpose, payload, and transmission method (TCP) for each operation code (OpCode). The protocol ensures consistent communication between the server and clients.
 
 ---
 
 ## Overview
 
 ### Transport Protocols
-- **TCP**: Reliable communication for operations requiring acknowledgment (e.g., player creation, hotkey inputs).
-- **UDP**: Lightweight and fast communication for real-time updates (e.g., player positions, bullets, obstacles).
+- **TCP**: Provides reliable communication, ensuring that operations requiring acknowledgment are successfully delivered.
 
 ### Message Structure
 All messages follow this general structure:
@@ -24,135 +23,95 @@ All messages follow this general structure:
 
 ### 1. **DEFAULT**
 - **Value**: `0`
-- **Description**: Used to save the client on the server.
+- **Description**: Default operation code.
 - **Payload**: None.
-- **Sent To**: Server or specific client.
-- **Transport**: TCP.
+- Sent To: Server, Clients.
+- Transport: TCP.
 
-### 2. **HOTKEY_PRESSED**
+### 2. **CREATE_PLAYER**
 - **Value**: `1`
-- **Description**: Notifies the server of a key press by a specific player.
+- **Description**: Creates a new player on the server.
 - **Payload**:
-  - `playerId` (int32_t): The ID of the player who pressed the key.
-  - `hotkeyCode` (int16_t): The code of the pressed key.
-- **Sent To**: Server.
-- **Transport**: TCP.
+  - `ID` (int16_t): Unique player ID.
+  - `Name` (string): Player name.
+- Sent To: Server.
+- Transport: TCP.
 
-### 3. **CREATE_PLAYER**
-- **Value**: `10`
-- **Description**: Requests the creation of a new player on the server.
+### 3. **CREATE_PLAYER_CALLBACK**
+- **Value**: `2`
+- **Description**: Acknowledges the creation of a new player.
 - **Payload**:
-  - `playerName` (string): The name of the player to create.
-- **Sent To**: Server.
-- **Transport**: TCP.
+  - `ID` (int16_t): Unique player ID.
+  - `Name` (string): Player name.
+  - `Position` (int16_t, int16_t): Initial player position.
+  - `Size` (int16_t): Initial player size.
+  - `TextSize` (unsigned int): Initial player text size.
+- Sent To: Clients.
+- Transport: TCP.
 
-### 4. **CREATE_PLAYER_CALLBACK**
-- **Value**: `11`
-- **Description**: Confirms the creation of a new player to the requesting client.
+### 4. **CREATE_PLAYER_BROADCAST**
+- **Value**: `3`
+- **Description**: Broadcasts the creation of a new player.
 - **Payload**:
-  - `playerId` (int32_t): The ID of the newly created player.
-  - `width` (int16_t): The width of the player’s sprite.
-  - `height` (int16_t): The height of the player’s sprite.
-- **Sent To**: Specific client (the one who requested the creation).
-- **Transport**: TCP.
+  - `ID` (int16_t): Unique player ID.
+  - `Name` (string): Player name.
+  - `Position` (int16_t, int16_t): Initial player position.
+  - `Size` (int16_t): Initial player size.
+  - `TextSize` (unsigned int): Initial player text size.
+- Sent To: Clients.
+- Transport: TCP.
 
-### 5. **CREATE_PLAYER_BROADCAST**
-- **Value**: `12`
-- **Description**: Broadcasts the creation of a new player to all connected clients.
+### 5. **UPDATE_PLAYER**
+- **Value**: `4`
+- **Description**: Send the player’s mouse coordinates.
 - **Payload**:
-  - `playerId` (int32_t): The ID of the new player.
-  - `playerName` (string): The name of the new player.
-  - `width` (int16_t): The width of the player’s sprite.
-  - `height` (int16_t): The height of the player’s sprite.
-- **Sent To**: All clients.
-- **Transport**: UDP.
+  - `ID` (int16_t): Unique player ID.
+  - `Direction mouse` (float_t, float_t): Mouse direction.
+- Sent To: Server.
+- Transport: TCP.
 
-### 6. **UPDATE_PLAYERS**
-- **Value**: `20`
-- **Description**: Updates player positions and states.
+### 6. **UPDATE_PLAYER**
+- **Value**: `4`
+- **Description**: Update the player’s position.
 - **Payload**:
-  - `playerId` (int32_t): The ID of the player.
-  - `posX` (int32_t): The player’s X-coordinate.
-  - `posY` (int32_t): The player’s Y-coordinate.
-- **Sent To**: All clients.
-- **Transport**: UDP.
+  - `ID` (int16_t): Unique player ID.
+  - `Position` (int16_t, int16_t): Player position.
+- Sent To: Client.
+- Transport: TCP.
 
-### 7. **UPDATE_VIEWPORT**
-- **Value**: `21`
-- **Description**: Updates the current map viewport.
+### 7. **CREATE_MAP**
+- **Value**: `5`
+- **Description**: Create the game map.
 - **Payload**:
-  - `viewport` (double): The viewport’s position.
-- **Sent To**: All clients.
-- **Transport**: UDP.
+  - `ID` (int16_t): Unique map ID.
+- Sent To: Client.
+- Transport: TCP.
 
-### 8. **UPDATE_OBSTACLES**
-- **Value**: `22`
-- **Description**: Updates obstacle positions or states.
+### 8. **ADD_FOOD**
+- **Value**: `6`
+- **Description**: Add food to the game map.
 - **Payload**:
-  - `obstacleId` (int32_t): The ID of the obstacle.
-  - `posX` (int32_t): The obstacle’s X-coordinate.
-  - `posY` (int32_t): The obstacle’s Y-coordinate.
-  - `size` (int16_t): The size of the obstacle.
-  - `type` (int16_t): The type of the obstacle.
-- **Sent To**: All clients.
-- **Transport**: UDP.
+  - `ID` (int16_t): Unique map ID.
+  - `Position` (int16_t, int16_t): Food position.
+- Sent To: Client.
+- Transport: TCP.
 
-### 9. **UPDATE_BULLETS**
-- **Value**: `23`
-- **Description**: Updates bullet positions or states.
+### 9. **REMOVE_FOOD**
+- **Value**: `7`
+- **Description**: Remove food from the game map.
 - **Payload**:
-  - `bulletId` (int32_t): The ID of the bullet.
-  - `posX` (int32_t): The bullet’s X-coordinate.
-  - `posY` (int32_t): The bullet’s Y-coordinate.
-  - `type` (int16_t): The type of the bullet.
-- **Sent To**: All clients.
-- **Transport**: UDP.
-
-### 10. **UPDATE_ENEMIES**
-- **Value**: `24`
-- **Description**: Updates enemy positions or states.
-- **Payload**:
-  - `enemyId` (int32_t): The ID of the enemy.
-  - `posX` (int32_t): The enemy’s X-coordinate.
-  - `posY` (int32_t): The enemy’s Y-coordinate.
-  - `width` (int16_t): The width of the enemy’s sprite.
-  - `height` (int16_t): The height of the enemy’s sprite.
-  - `type` (int16_t): The type of the enemy.
-- **Sent To**: All clients.
-- **Transport**: UDP.
-
-### 11. **UPDATE_ENTITY_HEALTH**
-- **Value**: `25`
-- **Description**: Broadcasts changes in the health of an entity (player or enemy).
-- **Payload**:
-  - `entityId` (int32_t): The ID of the entity.
-  - `health` (int16_t): The current health of the entity.
-  - `maxHealth` (int16_t): The maximum health of the entity.
-- **Sent To**: All clients.
-- **Transport**: UDP.
-
-### 12. **UPDATE_PLAYER_INFOS**
-- **Value**: `26`
-- **Description**: Updates player's infos.
-- **Payload**:
-  - `playerId` (int32_t): The ID of the player.
-  - `kills` (int16_t): The kills amount of the player.
-  - `score` (int32_t): The score of the player.
-- **Sent To**: Specific client.
-- **Transport**: UDP.
-
-### 13. **DELETE_ENTITY**
-- **Value**: `30`
-- **Description**: Deletes an entity from the game (e.g., player, enemy, bullet).
-- **Payload**:
-  - `entityId` (int32_t): The ID of the entity to delete.
-- **Sent To**: All clients.
-- **Transport**: UDP.
+  - `ID` (int16_t): Unique food ID.
+  - `MAP_ID` (int16_t): Unique map ID.
+  - `Position` (int16_t, int16_t): Food position.
+  - `PLAYER_ID` (int16_t): Unique client ID.
+  - `Size` (int16_t): Player size.
+  - `TextSize` (unsigned int): Player text size.
+  - `Score` (int16_t): Player score.`.
+- Sent To: Client.
+- Transport: TCP.
 
 ---
 
 ## Notes
 - The server and clients must strictly adhere to the protocol to ensure consistency.
 - Payloads must be interpreted exactly as defined.
-- TCP is used for operations requiring reliable delivery, while UDP is optimized for real-time updates.
-

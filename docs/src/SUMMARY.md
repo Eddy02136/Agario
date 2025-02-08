@@ -9,7 +9,7 @@
 
 7. [Client](./client/client.md)
      - [Network](./client/network/network.md)
-          - [Protocol](./client/network/protocol.md)
+     - [Protocol](./client/network/protocol.md)
      - [Menu](./client/menu.md)
      - [Game](./client/game.md)
 
@@ -18,7 +18,6 @@
      - [Components](./ecs/components.md)
      - [Systems](./ecs/systems.md)
 
-9. [Server](./server/network.md)
-     - [Miscellaneous](./server/misc.md)
+9. [Server](./server/server.md)
      - [Protocol](./server/protocol.md)
      - [Smart Buffer](./server/smartbuffer.md)

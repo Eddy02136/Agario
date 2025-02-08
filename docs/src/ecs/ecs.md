@@ -9,6 +9,6 @@ Entity Component System (ECS) is a design architecture commonly used in game dev
 By decoupling data (components) from logic (systems) and organizing them around entities, ECS enables flexibility, performance, and easier management of complex systems.
 
 For more details, refer to:
-- [Entity](#)
-- [Components](#)
-- [System](#)
+- [Entity](entity.md)
+- [Components](components.md)
+- [Systems](systems.md)

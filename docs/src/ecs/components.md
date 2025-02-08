@@ -16,3 +16,4 @@ A component is a data container that holds specific attributes of an entity.
 | **Shape**        | Defines entity as shape (rectangle or circle) | • `ShapeType type`<br/> • `std::pair<double, double> size`<br/> • `float radius`           |
 | **Sound**        | Defines a sound at an entity                  | • `std::string soundFile`                                                                  |
 | **Link**         | Link an entity to another entity              | • `int id`                                                                                 |
+| **View**         | Set the window view to follow the entity.              | • `sf::View view` <br/> • `std::pair<float, float> size`                                                                                |
