@@ -63,9 +63,19 @@ Before getting started, make sure you have the following installed on your machi
 
     Open a new terminal and make sure to be in **Agario/**
 
+    You can specify the server IP address and port as arguments:
+
+    ```bash
+    ./build/client/Client -p 8080 -h "127.0.0.1"
+    ```
+
+    Or you can run the client without arguments:
+
     ```bash
     ./build/client/Client
     ```
+
+    If you run the client without arguments, by default it will connect to the server at ip 127.0.0.1 and port 8080.
 
 ---
 
