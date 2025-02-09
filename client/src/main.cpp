@@ -22,7 +22,6 @@
 #include "game.hpp"
 
 static void getArgs(int ac, char **av) {
-    std::cout << ac << std::endl;
 	if (ac != 5) {
 		return;
 	}
