@@ -18,6 +18,7 @@ class Protocol {
             REMOVE_FOOD,
             EAT_PLAYER,
             REMOVE_PLAYER,
+            DEAD_PLAYER,
         };
 
         Protocol();

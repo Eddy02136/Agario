@@ -41,6 +41,10 @@ void Game::networkThread(Network &network)
             throw std::runtime_error("Failed to connect to server");
         }
         while (!_stopNetworkThread) {
+            if (network.isDead()) {
+                _stopNetworkThread = true;
+                break;
+            }
             network.handleMessages(_direction);
         }
     } catch (const std::exception &e) {
@@ -68,7 +72,10 @@ void Game::gameManager() {
             }
             Menu::get().setupInput(event);
         }
-        
+        if (network.isDead()) {
+            window.close();
+            break;
+        }
         if (!Menu::get().getIsPlayed()) {
             Menu::get().displayMainMenu(window, system);
         } else {

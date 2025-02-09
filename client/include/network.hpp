@@ -17,9 +17,11 @@ class Network {
         void handleMessages(std::pair<float, float> direction);
         int getSocket() const;
         std::map<int, GameEngine::Entity> getEntities() const;
+        bool isDead() const;
 
     private:
         std::string _ip;
         int _port;
         int _socket;
+        bool _isDead = false;
 };

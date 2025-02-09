@@ -189,7 +189,15 @@ void Protocol::check_player_collision(int clientId, std::map<int, Client>& clien
         if (distance <= (clientRadius + otherRadius)) {
             if (otherSize > clientSize) {
                 smartBuffer.reset();
-                otherClient.setSize(otherSize + clientSize/ 2);
+                smartBuffer << static_cast<int16_t>(OpCode::DEAD_PLAYER)
+                            << static_cast<int16_t>(clientIndex->first);
+                Server::get().sendToClient(client.getSocket(), smartBuffer);
+                smartBuffer.reset();
+                smartBuffer << static_cast<int16_t>(OpCode::REMOVE_PLAYER)
+                            << static_cast<int16_t>(clientIndex->first);
+                Server::get().sendToAllClients(smartBuffer);
+                smartBuffer.reset();
+                otherClient.setSize(otherSize + clientSize / 2);
                 otherClient.setTextSize(otherClient.getSize());
                 otherClient.setScore(otherClient.getScore() + (clientSize * 2));
                 smartBuffer << static_cast<int16_t>(OpCode::EAT_PLAYER)
@@ -198,10 +206,7 @@ void Protocol::check_player_collision(int clientId, std::map<int, Client>& clien
                             << static_cast<unsigned int>(otherClient.getTextSize())
                             << static_cast<int16_t>(otherClient.getScore());
                 Server::get().sendToAllClients(smartBuffer);
-                smartBuffer.reset();
-                smartBuffer << static_cast<int16_t>(OpCode::REMOVE_PLAYER)
-                            << static_cast<int16_t>(clientIndex->first);
-                Server::get().sendToAllClients(smartBuffer);
+                Server::get().getRemoveClients().push_back(clientIndex->first);
                 break;
             }
         }

@@ -45,80 +45,94 @@ int Network::getSocket() const {
     return _socket;
 }
 
+bool Network::isDead() const {
+    return _isDead;
+}
+
 void Network::handleMessages(std::pair<float, float> direction) {
-    fd_set readfds;
-    fd_set writefds;
-    GameEngine::System system;
-    int ret;
-    SmartBuffer smartBuffer;
-    struct timeval timeout;
-    timeout.tv_sec = 0;
-    timeout.tv_usec = 10000;
+    try {
+        fd_set readfds;
+        fd_set writefds;
+        GameEngine::System system;
+        int ret;
+        SmartBuffer smartBuffer;
+        struct timeval timeout;
+        timeout.tv_sec = 0;
+        timeout.tv_usec = 10000;
 
-    FD_ZERO(&readfds);
-    FD_ZERO(&writefds);
-    FD_SET(_socket, &readfds);
-    FD_SET(_socket, &writefds);
-    ret = select(FD_SETSIZE, &readfds, &writefds, NULL, &timeout);
-    if (ret == -1) {
-        throw std::runtime_error("Failed to select");
-    }
-    if (ret) {
-        if (FD_ISSET(_socket, &readfds)) {
-            receiveData(smartBuffer);
-            int16_t opCode;
-            smartBuffer >> opCode;
-            switch(opCode) {
-                case Protocol::CREATE_PLAYER_CALLBACK:
-                    std::cout << "[Network] Create Player" << std::endl;
-                    Protocol::get().createPlayerCallback(smartBuffer);
-                    break;
-                
-                case Protocol::CREATE_PLAYER_BROADCAST:
-                    std::cout << "[Network] Create Player Broadcast" << std::endl;
-                    Protocol::get().createPlayerBroadcast(smartBuffer);
-                    break;
-                
-                case Protocol::UPDATE_POSITION:
-                    std::cout << "[Network] Update Position" << std::endl;
-                    Protocol::get().updatePosition(smartBuffer);
-                    break;
-
-                case Protocol::CREATE_MAP:
-                    std::cout << "[Network] Create Map" << std::endl;
-                    Protocol::get().createMap(smartBuffer);
-                    break;
-
-                case Protocol::ADD_FOOD:
-                    std::cout << "[Network] Add Food" << std::endl;
-                    Protocol::get().addFood(smartBuffer);
-                    break;
-
-                case Protocol::REMOVE_FOOD:
-                    std::cout << "[Network] Eat Food" << std::endl;
-                    Protocol::get().eatFood(smartBuffer);
-                    break;
-
-                case Protocol::EAT_PLAYER:
-                    std::cout << "[Network] Eat Player" << std::endl;
-                    Protocol::get().eatPlayer(smartBuffer);
-                    break;
-
-                case Protocol::REMOVE_PLAYER:
-                    std::cout << "[Network] Remove Player" << std::endl;
-                    Protocol::get().removePlayer(smartBuffer);
-                    break;
+        FD_ZERO(&readfds);
+        FD_ZERO(&writefds);
+        FD_SET(_socket, &readfds);
+        FD_SET(_socket, &writefds);
+        ret = select(FD_SETSIZE, &readfds, &writefds, NULL, &timeout);
+        if (ret == -1) {
+            throw std::runtime_error("Failed to select");
+        }
+        if (ret) {
+            if (FD_ISSET(_socket, &readfds)) {
+                receiveData(smartBuffer);
+                int16_t opCode;
+                smartBuffer >> opCode;
+                switch(opCode) {
+                    case Protocol::CREATE_PLAYER_CALLBACK:
+                        std::cout << "[Network] Create Player" << std::endl;
+                        Protocol::get().createPlayerCallback(smartBuffer);
+                        break;
                     
-                default:
-                    std::cout << "[Network] Unknown operation code: " << opCode << std::endl;
-                    break;
+                    case Protocol::CREATE_PLAYER_BROADCAST:
+                        std::cout << "[Network] Create Player Broadcast" << std::endl;
+                        Protocol::get().createPlayerBroadcast(smartBuffer);
+                        break;
+                    
+                    case Protocol::UPDATE_POSITION:
+                        std::cout << "[Network] Update Position" << std::endl;
+                        Protocol::get().updatePosition(smartBuffer);
+                        break;
+
+                    case Protocol::CREATE_MAP:
+                        std::cout << "[Network] Create Map" << std::endl;
+                        Protocol::get().createMap(smartBuffer);
+                        break;
+
+                    case Protocol::ADD_FOOD:
+                        std::cout << "[Network] Add Food" << std::endl;
+                        Protocol::get().addFood(smartBuffer);
+                        break;
+
+                    case Protocol::REMOVE_FOOD:
+                        std::cout << "[Network] Eat Food" << std::endl;
+                        Protocol::get().eatFood(smartBuffer);
+                        break;
+
+                    case Protocol::EAT_PLAYER:
+                        std::cout << "[Network] Eat Player" << std::endl;
+                        Protocol::get().eatPlayer(smartBuffer);
+                        break;
+
+                    case Protocol::REMOVE_PLAYER:
+                        std::cout << "[Network] Remove Player" << std::endl;
+                        Protocol::get().removePlayer(smartBuffer);
+                        break;
+
+                    case Protocol::DEAD_PLAYER:
+                        std::cout << "[Network] Dead Player" << std::endl;
+                        break;
+                        
+                    default:
+                        std::cout << "[Network] Unknown operation code: " << opCode << std::endl;
+                        _isDead = true;
+                        break;
+                }
             }
-        }
-        if (FD_ISSET(_socket, &writefds)) {
-            smartBuffer.reset();
-            smartBuffer << static_cast<int16_t>(4) << static_cast<float_t>(direction.first) << static_cast<float_t>(direction.second);
-            sendData(smartBuffer);
-        }
+            if (FD_ISSET(_socket, &writefds)) {
+                smartBuffer.reset();
+                smartBuffer << static_cast<int16_t>(4) << static_cast<float_t>(direction.first) << static_cast<float_t>(direction.second);
+                sendData(smartBuffer);
+            }
+        } 
+    } catch (const std::exception &e) {
+        std::cerr << "Network error: " << e.what() << std::endl;
+        _isDead = true;
     }
 }
 
