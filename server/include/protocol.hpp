@@ -1,3 +1,9 @@
+/*
+** EPITECH PROJECT, 2024
+** Agario
+** File description:
+** protocol
+*/
 
 #include <iostream>
 #include <map>
@@ -16,7 +22,9 @@ class Protocol {
             CREATE_MAP,
             ADD_FOOD,
             REMOVE_FOOD,
+            EAT_PLAYER,
             REMOVE_PLAYER,
+            DEAD_PLAYER,
         };
 
         Protocol();

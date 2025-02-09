@@ -1,6 +1,11 @@
+/*
+** EPITECH PROJECT, 2024
+** Agario
+** File description:
+** server
+*/
 
 #include <iostream>
-#include <config.hpp>
 #include <sys/select.h>
 #include <sstream>
 #include <unistd.h>
@@ -11,6 +16,8 @@
 #include "map.hpp"
 #include "server.hpp"
 #include "protocol.hpp"
+
+static const int PORT = 8080;
 
 Server::Server() {}
 
@@ -35,6 +42,14 @@ int Server::getId() {
     return this->id;
 }
 
+std::mutex& Server::getClientMutex() {
+    return this->_clientMutex;
+}
+
+std::vector<int>& Server::getRemoveClients() {
+    return this->_removeClients;
+}
+
 void Server::setId(int id) {
     this->id = id;
 }
@@ -43,17 +58,17 @@ void Server::init() {
     int opt = 1;
 
     this->_tcpSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (this->_tcpSocket == FAILURE)
+    if (this->_tcpSocket == -1)
         throw std::runtime_error("Failed to create TCP socket");
 
     _tcpAddr.sin_family = AF_INET;
     _tcpAddr.sin_addr.s_addr = INADDR_ANY;
     _tcpAddr.sin_port = htons(PORT);
-    if (bind(_tcpSocket, reinterpret_cast<sockaddr*>(&_tcpAddr), sizeof(_tcpAddr)) < SUCCESS) {
+    if (bind(_tcpSocket, reinterpret_cast<sockaddr*>(&_tcpAddr), sizeof(_tcpAddr)) < 0) {
         throw std::runtime_error("Bind failed for TCP socket.");
     }
 
-    if (listen(_tcpSocket, 3) < SUCCESS) {
+    if (listen(_tcpSocket, 3) < 0) {
         throw std::runtime_error("Listen failed for TCP socket.");
     }
 
@@ -71,7 +86,7 @@ void Server::manage_file_descriptors() {
     FD_SET(this->_tcpSocket, &this->rfds);
     std::lock_guard<std::mutex> lock(_clientMutex);
     for (auto &client : this->_clients) {
-        if (client.second.getSocket() != FAILURE) {
+        if (client.second.getSocket() != -1) {
             FD_SET(client.second.getSocket(), &this->rfds);
         }
     }
@@ -127,7 +142,7 @@ void Server::handle_client(int id, int clientSocket) {
         SmartBuffer smartBuffer;
         while (true) {
             if (FD_ISSET(clientSocket, &this->rfds)) {
-                char buffer[DEFAULT_BYTES] = {};
+                char buffer[1024] = {};
 
                 const ssize_t bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
                 if (bytesRead <= 0) {
@@ -145,6 +160,17 @@ void Server::handle_client(int id, int clientSocket) {
                 smartBuffer.inject(reinterpret_cast<uint8_t*>(buffer), bytesRead);
                 Protocol::get().handle_message(id, clientSocket, this->_clients, smartBuffer);
             }
+            for (int clientIndex : this->_removeClients) {
+                std::lock_guard<std::mutex> lock(_clientMutex);
+                auto client = _clients.find(clientIndex);
+                if (client != _clients.end()) {
+                    FD_CLR(client->second.getSocket(), &this->rfds);
+                    shutdown(client->second.getSocket(), SHUT_RDWR);
+                    ::close(client->second.getSocket());
+                    _clients.erase(client->first);
+                    return;
+                }
+            }
         }
     } catch (const std::exception &e) {
         std::cerr << "[Server] Exception in client thread: " << e.what() << std::endl;
@@ -157,7 +183,7 @@ void Server::run() {
         try {
             manage_file_descriptors();
             result = select(FD_SETSIZE, &this->rfds, NULL, NULL, NULL);
-            if (result < SUCCESS) {
+            if (result < 0) {
                 throw std::runtime_error("Select failed.");
             }
             if (FD_ISSET(this->_tcpSocket, &this->rfds)) {

@@ -110,6 +110,32 @@ All messages follow this general structure:
 - Sent To: Client.
 - Transport: TCP.
 
+### 10. **EAT_PLAYER**
+- **Value**: `8`
+- **Description**: Update the player's size and score after eating another player.
+- **Payload**:
+  - `ID` (int16_t): Unique player ID.
+  - `Size` (int16_t): Player size.
+  - `TextSize` (unsigned int): Player text size.
+  - `Score` (int16_t): Player score.
+- Sent To: Client.
+- Transport: TCP.
+
+### 11. **REMOVE_PLAYER**
+- **Value**: `9`
+- **Description**: Remove a player from the game.
+- **Payload**:
+  - `ID` (int16_t): Unique player ID.
+- Sent To: Client.
+- Transport: TCP.
+
+### 12. **DEAD_PLAYER**
+- **Value**: `10`
+- **Description**: Notify the player that they are dead.
+- **Payload**: None.
+- Sent To: Client.
+- Transport: TCP.
+
 ---
 
 ## Notes

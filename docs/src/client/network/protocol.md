@@ -10,3 +10,5 @@ The Protocol class handles the processing of various game-related messages, such
 | **createMap**            | Handles the creation of a map by receiving the map's ID. |
 | **addFood**             | Adds food to the game based on the received data. |
 | **eatFood**             | Removes food from the game based on the received data and updates the size of the player who ate it. |
+| **eatPlayer**           | Update the size and score of the player who ate another player. |
+| **removePlayer**        | Removes a player from the game based on the received data. |
