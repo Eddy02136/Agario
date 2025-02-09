@@ -32,7 +32,7 @@ The Server class manages network communication for the server, including TCP con
 | **manage_file_descriptors**    | Manages the fd_set for the TCP socket and client sockets, setting them up for monitoring with select().      |
 | **sendToClient**               | Sends a message to a specific client using the SmartBuffer (handles size and data).                             |
 | **sendToAllClients**           | Sends a message to all connected clients.                                                                         |
-| **sendToAllClientsExcept**     | Sends a message to all clients except one, identified by their client ID.                                         |
+| **sendToAllClientsExcept**     | Sends a message to all clients except one, identified by their client socket.                                         |
 | **add_client**                 | Accepts a new client connection, assigns it an ID, and creates a new thread to handle the client.                |
 | **handle_client**              | Handles the communication with a specific client by receiving and processing messages in a separate thread.      |
 | **run**                        | Main server loop that manages the file descriptors and accepts new client connections.                           |

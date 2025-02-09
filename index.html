@@ -161,8 +161,8 @@ Inspired by the classic multiplayer arcade genre, players control a cell that gr
 <ul>
 <li><a href="#Prerequisites">Prerequisites</a></li>
 <li><a href="#run-the-game">Run the game</a></li>
-<li><a href="#project-structure">Project structure</a></li>
 <li><a href="#documentation">Documentation</a></li>
+<li><a href="#project-structure">Project structure</a></li>
 </ul>
 <hr />
 <h2 id="prerequisites"><a class="header" href="#prerequisites">Prerequisites</a></h2>
@@ -206,23 +206,43 @@ make
 <li>
 <p>Start the Client:</p>
 <p>Open a new terminal and make sure to be in <strong>Agario/</strong></p>
+<p>You can specify the server IP address and port as arguments:</p>
+<pre><code class="language-bash">./build/client/Client -p 8080 -h "127.0.0.1"
+</code></pre>
+<p>Or you can run the client without arguments:</p>
 <pre><code class="language-bash">./build/client/Client
 </code></pre>
+<p>If you run the client without arguments, by default it will connect to the server at ip 127.0.0.1 and port 8080.</p>
 </li>
 </ol>
 <hr />
-<h2 id="project-structure"><a class="header" href="#project-structure">Project structure</a></h2>
-<p><code>font/</code>: Text font.</p>
-<p><code>client/</code>: Contains the client-side game logic and graphics.</p>
-<p><code>external/</code>: External library needed.</p>
-<p><code>game_engine/</code>: Handles server-side game_engine.</p>
-<p><code>server/</code>: Handles server-side networking.</p>
-<hr />
 <h2 id="documentation"><a class="header" href="#documentation">Documentation</a></h2>
 <p>To access the project documentation, use <code>mdbook</code>.</p>
+<h3 id="installing-mdbook-on-ubuntu"><a class="header" href="#installing-mdbook-on-ubuntu">Installing <code>mdbook</code> on Ubuntu</a></h3>
 <ol>
-<li>Navigate to the <code>docs/</code> directory:
-<pre><code class="language-bash">cd docs
+<li>
+<p>Install <code>cargo</code> (if not already installed):</p>
+<pre><code class="language-bash">curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+</code></pre>
+<p>Then reload your shell:</p>
+<pre><code class="language-bash">source $HOME/.cargo/env
+</code></pre>
+</li>
+<li>
+<p>Install <code>mdbook</code>:</p>
+<pre><code class="language-bash">cargo install mdbook
+</code></pre>
+</li>
+<li>
+<p>Verify the installation:</p>
+<pre><code class="language-bash">mdbook --version
+</code></pre>
+</li>
+</ol>
+<h3 id="running-the-documentation-server"><a class="header" href="#running-the-documentation-server">Running the documentation server</a></h3>
+<ol>
+<li>Navigate to the <code>doc/</code> directory:
+<pre><code class="language-bash">cd doc
 </code></pre>
 </li>
 <li>Start the documentation server:
@@ -235,6 +255,14 @@ make
 </li>
 </ol>
 <p>This will provide an interactive version of the documentation accessible from your web browser.</p>
+<hr />
+<h2 id="project-structure"><a class="header" href="#project-structure">Project structure</a></h2>
+<p><code>client/</code>: Contains the client-side game logic and graphics.</p>
+<p><code>docs/</code>: Contains the project documentation.</p>
+<p><code>external/</code>: External library needed.</p>
+<p><code>font/</code>: Text font.</p>
+<p><code>game_engine/</code>: Handles server-side game_engine.</p>
+<p><code>server/</code>: Handles server-side networking.</p>
 
                     </main>
 
