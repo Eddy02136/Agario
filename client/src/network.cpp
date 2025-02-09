@@ -1,3 +1,9 @@
+/*
+** EPITECH PROJECT, 2024
+** Agario
+** File description:
+** network
+*/
 
 #include <arpa/inet.h>
 #include <sys/types.h>

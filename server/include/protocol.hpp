@@ -1,3 +1,9 @@
+/*
+** EPITECH PROJECT, 2024
+** Agario
+** File description:
+** protocol
+*/
 
 #include <iostream>
 #include <map>

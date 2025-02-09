@@ -1,6 +1,9 @@
-//
-// Created by Eddy Gardes on 27/01/2025.
-//
+/*
+** EPITECH PROJECT, 2024
+** Agario
+** File description:
+** game
+*/
 
 #pragma once
 #include <thread>

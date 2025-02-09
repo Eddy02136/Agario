@@ -1,4 +1,9 @@
-
+/*
+** EPITECH PROJECT, 2024
+** Agario
+** File description:
+** network
+*/
 
 #pragma once
 

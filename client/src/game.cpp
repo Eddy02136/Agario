@@ -1,3 +1,10 @@
+/*
+** EPITECH PROJECT, 2024
+** Agario
+** File description:
+** game
+*/
+
 #include <SFML/Graphics.hpp>
 #include <cmath>
 #include <thread>

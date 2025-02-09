@@ -6,7 +6,6 @@
 */
 
 #include <iostream>
-#include "config.hpp"
 #include "protocol.hpp"
 #include <string>
 #include <unistd.h>
@@ -119,7 +118,6 @@ void Protocol::check_food_collision(int clientId, const std::pair<float, float>&
 
     auto lower = foodMap.lower_bound({x1, y1});
     auto higher = foodMap.upper_bound({x2, y2});
-    std::cout << "Client found " << std::distance(lower, higher) << " food items" << std::endl;
 
     for (auto food = lower; food != higher; ++food) {
         if (food == foodMap.end()) {
@@ -151,8 +149,7 @@ void Protocol::check_food_collision(int clientId, const std::pair<float, float>&
                             << static_cast<float_t>(client.getSize())
                             << static_cast<unsigned int>(client.getTextSize())
                             << static_cast<int16_t>(client.getScore());
-                
-                std::cout << "Player " << clientId << " ate food " << foodId << std::endl;
+            
                 Map::get().removeFood(foodPos);
                 
                 Server::get().sendToAllClients(smartBuffer);
