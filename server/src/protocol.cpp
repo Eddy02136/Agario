@@ -187,25 +187,21 @@ void Protocol::check_player_collision(int clientId, std::map<int, Client>& clien
         float distance = std::sqrt(dx * dx + dy * dy);
 
         if (distance <= (clientRadius + otherRadius)) {
-            smartBuffer.reset();
-            if (clientSize > otherSize) {
-                client.setSize(clientSize + otherSize / 2);
-                client.setTextSize(client.getSize());
-                client.setScore(client.getScore() + (clientSize * 2));
-                std::cout << "Player " << clientId << " ate Player " << otherIndex->first << std::endl;
+            if (otherSize > clientSize) {
+                smartBuffer.reset();
+                otherClient.setSize(otherSize + clientSize/ 2);
+                otherClient.setTextSize(otherClient.getSize());
+                otherClient.setScore(otherClient.getScore() + (clientSize * 2));
                 smartBuffer << static_cast<int16_t>(OpCode::EAT_PLAYER)
-                            << static_cast<int16_t>(clientIndex->first)
-                            << static_cast<float_t>(client.getSize())
-                            << static_cast<unsigned int>(client.getTextSize())
-                            << static_cast<int16_t>(client.getScore());
+                            << static_cast<int16_t>(otherIndex->first)
+                            << static_cast<float_t>(otherClient.getSize())
+                            << static_cast<unsigned int>(otherClient.getTextSize())
+                            << static_cast<int16_t>(otherClient.getScore());
                 Server::get().sendToAllClients(smartBuffer);
-                break;
-            } else if (otherSize > clientSize) {
-                std::cout << "Player " << clientId << " has been eaten by " << otherIndex->first << std::endl;
+                smartBuffer.reset();
                 smartBuffer << static_cast<int16_t>(OpCode::REMOVE_PLAYER)
                             << static_cast<int16_t>(clientIndex->first);
                 Server::get().sendToAllClients(smartBuffer);
-                Server::get().getRemoveClients().push_back(clientIndex->first);
                 break;
             }
         }
