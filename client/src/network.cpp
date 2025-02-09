@@ -116,11 +116,11 @@ void Network::handleMessages(std::pair<float, float> direction) {
 
                     case Protocol::DEAD_PLAYER:
                         std::cout << "[Network] Dead Player" << std::endl;
+                        _isDead = true;
                         break;
                         
                     default:
                         std::cout << "[Network] Unknown operation code: " << opCode << std::endl;
-                        _isDead = true;
                         break;
                 }
             }
