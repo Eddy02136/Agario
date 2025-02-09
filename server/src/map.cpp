@@ -33,27 +33,19 @@ void Map::createMap(int id) {
 }
 
 void Map::addFood(int id, const std::pair<int, int> &foodPosition) {
-    _map[id] = foodPosition;
+    _map[foodPosition] = id;
 }
 
-void Map::removeFood(int id) {
-    _map.erase(id);
+void Map::removeFood(std::pair<int, int> foodPosition) {
+    _map.erase(foodPosition);
 }
 
-const std::map<int, std::pair<int, int>> &Map::getMap() const {
+const std::map<std::pair<int, int>, int> &Map::getMap() const {
     return _map;
 }
 
 int Map::getId() const {
     return _id;
-}
-
-std::pair<int, int> Map::getFoodPosition(int id) const {
-    auto it = _map.find(id);
-    if (it != _map.end()) {
-        return it->second;
-    }
-    return {0, 0};
 }
 
 int Map::getWidth() {

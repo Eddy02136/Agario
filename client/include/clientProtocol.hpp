@@ -17,6 +17,7 @@ class Protocol {
             CREATE_MAP,
             ADD_FOOD,
             REMOVE_FOOD,
+            EAT_PLAYER,
             REMOVE_PLAYER,
         };
 
@@ -28,6 +29,8 @@ class Protocol {
         void createMap(SmartBuffer &smartBuffer);
         void addFood(SmartBuffer &smartBuffer);
         void eatFood(SmartBuffer &smartBuffer);
+        void eatPlayer(SmartBuffer &smartBuffer);
+        void removePlayer(SmartBuffer &smartBuffer);
 
     private:
         Protocol();

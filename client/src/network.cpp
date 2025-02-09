@@ -98,6 +98,16 @@ void Network::handleMessages(std::pair<float, float> direction) {
                     std::cout << "[Network] Eat Food" << std::endl;
                     Protocol::get().eatFood(smartBuffer);
                     break;
+
+                case Protocol::EAT_PLAYER:
+                    std::cout << "[Network] Eat Player" << std::endl;
+                    Protocol::get().eatPlayer(smartBuffer);
+                    break;
+
+                case Protocol::REMOVE_PLAYER:
+                    std::cout << "[Network] Remove Player" << std::endl;
+                    Protocol::get().removePlayer(smartBuffer);
+                    break;
                     
                 default:
                     std::cout << "[Network] Unknown operation code: " << opCode << std::endl;

@@ -48,7 +48,7 @@ void Protocol::updatePosition(SmartBuffer &smartBuffer) {
     smartBuffer >> id >> x >> y;
     std::pair<float, float> pos = {x, y};
     GameEngine::System system;
-    system.update(id, _entities, GameEngine::UpdateType::Position, pos); 
+    system.update(id, _entities, GameEngine::UpdateType::Position, pos);
     //system.update(id + 1, _entities, GameEngine::UpdateType::Position, pos, 0);
 }
 
@@ -103,6 +103,40 @@ void Protocol::eatFood(SmartBuffer &smartBuffer) {
             //system.update(1000, _entities, GameEngine::UpdateType::Position, newScorePos, 0);                                
             //system.update(1000, _entities, GameEngine::UpdateType::Text, "Score: " + std::to_string(score));
         }
+    }
+}
+
+void Protocol::eatPlayer(SmartBuffer &smartBuffer) {
+    GameEngine::System system;
+    uint16_t clientId;
+    float size;
+    unsigned int textSize;
+    uint16_t score;
+    smartBuffer >> clientId >> size >> textSize >> score;
+    if (_entities.find(clientId) != _entities.end()) {
+        system.update(clientId, _entities, GameEngine::UpdateType::CircleRadius, size);
+        if (_entities[clientId].hasComponent<View>()) {
+            auto &viewComp = _entities[clientId].getComponent<View>();
+            std::pair<float, float> viewSize = viewComp.getSize();
+            float playerSize = size;
+            const std::pair<float, float> V0 = {1280.0f, 720.0f};
+            const float S0 = 30.0f;
+            const float alpha = 0.6f;
+            std::pair<float, float> newSize = {
+                V0.first * std::pow(playerSize / S0, alpha),
+                V0.second * std::pow(playerSize / S0, alpha)
+            };
+            system.update(clientId, _entities, GameEngine::UpdateType::View, newSize);
+        }
+    }
+}
+
+void Protocol::removePlayer(SmartBuffer &smartBuffer) {
+    uint16_t id;
+    smartBuffer >> id;
+    if (_entities.find(id) != _entities.end()) {
+        _entities.erase(id);
+        _entities.erase(id + 1);
     }
 }
 

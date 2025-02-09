@@ -15,10 +15,9 @@ class Map {
     public:
         static Map& get();
         void addFood(int id, const std::pair<int, int> &position);
-        void removeFood(int id);
+        void removeFood(std::pair<int, int> foodPosition);
 
-        const std::map<int, std::pair<int, int>> &getMap() const;
-        std::pair<int, int> getFoodPosition(int id) const;
+        const std::map<std::pair<int, int>, int> &getMap() const;
         void createMap(int id);
 
         int getWidth();
@@ -31,5 +30,5 @@ class Map {
         int _id = 0;
         int _width = 5000;
         int _height = 5000;
-        std::map<int, std::pair<int, int>> _map;
+        std::map<std::pair<int, int>, int> _map;
 };

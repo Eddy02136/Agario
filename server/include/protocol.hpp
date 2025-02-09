@@ -16,6 +16,7 @@ class Protocol {
             CREATE_MAP,
             ADD_FOOD,
             REMOVE_FOOD,
+            EAT_PLAYER,
             REMOVE_PLAYER,
         };
 

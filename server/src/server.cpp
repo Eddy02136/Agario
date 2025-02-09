@@ -35,6 +35,14 @@ int Server::getId() {
     return this->id;
 }
 
+std::mutex& Server::getClientMutex() {
+    return this->_clientMutex;
+}
+
+std::vector<int>& Server::getRemoveClients() {
+    return this->_removeClients;
+}
+
 void Server::setId(int id) {
     this->id = id;
 }
@@ -144,6 +152,17 @@ void Server::handle_client(int id, int clientSocket) {
                 smartBuffer.reset();
                 smartBuffer.inject(reinterpret_cast<uint8_t*>(buffer), bytesRead);
                 Protocol::get().handle_message(id, clientSocket, this->_clients, smartBuffer);
+            }
+            for (int clientIndex : this->_removeClients) {
+                std::lock_guard<std::mutex> lock(_clientMutex);
+                auto client = _clients.find(clientIndex);
+                if (client != _clients.end()) {
+                    FD_CLR(client->second.getSocket(), &this->rfds);
+                    shutdown(client->second.getSocket(), SHUT_RDWR);
+                    ::close(client->second.getSocket());
+                    _clients.erase(client->first);
+                    return;
+                }
             }
         }
     } catch (const std::exception &e) {
