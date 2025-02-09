@@ -22,7 +22,10 @@
 #include "System.hpp"
 #include "network.hpp"
 
-Network::Network() : _ip("127.0.0.1"), _port(8080) {}
+Network::Network(std::string& ip, int port) {
+    _ip = ip;
+    _port = port;
+}
 
 void Network::connectToServer(std::string &name) {
     struct sockaddr_in server;

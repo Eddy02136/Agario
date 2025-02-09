@@ -39,6 +39,14 @@ static std::pair<float, float> handlePlayerMovement(sf::RenderWindow& window) {
     return normalizedDirection;
 }
 
+static void initNetwork(Network &network) {
+    if (Game::get().getIp().empty() || Game::get().getPort() == 0) {
+        network = Network();
+    } else {
+        network = Network(Game::get().getIp(), Game::get().getPort());
+    }
+}
+
 static std::atomic<bool> _stopNetworkThread{false};
 
 void Game::networkThread(Network &network)
@@ -65,7 +73,7 @@ void Game::gameManager() {
     Menu menu;
     GameEngine::System system;
     std::pair<float, float> direction(0.0f, 0.0f);
-
+    initNetwork(network);
     while (window.isOpen()) {
         window.clear();
         sf::Event event;
@@ -117,6 +125,22 @@ std::string Game::getUsername() {
 
 void Game::setUsername(std::string username) {
     _username = std::move(username);
+}
+
+void Game::setIp(const std::string& ip) {
+    _ip = ip;
+}
+
+void Game::setPort(int port) {
+    _port = port;
+}
+
+std::string& Game::getIp() {
+    return _ip;
+}
+
+int Game::getPort() {
+    return _port;
 }
 
 Game::~Game() {

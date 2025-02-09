@@ -21,8 +21,30 @@
 #include "System.hpp"
 #include "game.hpp"
 
-int main() {
+static void getArgs(int ac, char **av) {
+    std::cout << ac << std::endl;
+	if (ac != 5) {
+		return;
+	}
+    for (int i = 0; i < ac; i++) {
+        try {
+            std::string arg = av[i];
+
+            if (arg == "-p" && i + 1 < ac) {
+                Game::get().setPort(std::stoi(av[i + 1]));
+            }
+            if (arg == "-h" && i + 1 < ac) {
+                Game::get().setIp(av[i + 1]);
+            }
+        } catch (const std::exception &e) {
+            std::cerr << "Error: " << e.what() << std::endl;
+        }
+    }
+}
+
+int main(int ac, char **av) {
 	try {
+		getArgs(ac, av);
 		Game::get().gameManager();
 	} catch (const std::exception &e) {
 		std::cerr << e.what() << std::endl;

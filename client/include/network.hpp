@@ -14,7 +14,8 @@
 
 class Network {
     public:
-        Network();
+        Network() : _port(8080), _ip("127.0.0.1") {}
+        Network(std::string& ip, int port);
         ~Network();
         void connectToServer(std::string &name);
         void receiveData(SmartBuffer &smartBuffer);
