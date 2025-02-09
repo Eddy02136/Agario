@@ -106,9 +106,9 @@ To access the project documentation, use `mdbook`.
 
 ### Running the documentation server
 
-1. Navigate to the `doc/` directory:
+1. Navigate to the `docs/` directory:
     ```bash
-    cd doc
+    cd docs
     ```
 2. Start the documentation server:
     ```bash
