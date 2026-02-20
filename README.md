@@ -2,137 +2,144 @@
 
 ## Description
 
-This project is a recreation of the Agar.io game using our own custom game engine.
-Inspired by the classic multiplayer arcade genre, players control a cell that grows by consuming smaller cells while avoiding larger opponents in a competitive online environment.
+This project is a recreation of the Agar.io game using our own custom game engine. Inspired by the classic multiplayer arcade genre, players control a cell that grows by consuming smaller cells while avoiding larger opponents in a competitive online environment.
 
 ---
 
 ## Table of contents
 
--   [Prerequisites](#Prerequisites)
--   [Run the game](#run-the-game)
--   [Documentation](#documentation)
--   [Project structure](#project-structure)
+1. [Prerequisites](#prerequisites)
+2. [Run the game](#run-the-game)
+3. [Documentation](#documentation)
+4. [Project structure](#project-structure)
 
 ---
 
 ## Prerequisites
 
 Before getting started, make sure you have the following installed on your machine:
-- A C++ compiler supporting C++17
 
-1. Clone the repository:
+* A C++ compiler supporting **C++17**
+* CMake ≥ 3.15
+* Git
 
-    ```bash
-    git clone --recurse-submodules git@github.com:Eddy02136/Agario.git
-    cd Agario
-    ```
-   
-2. Install UDev library (if necessary)
+Clone the repository:
 
-   On ubuntu:
+```bash
+git clone --recurse-submodules git@github.com:Eddy02136/Agario.git
+cd Agario
+```
 
-   ```bash
-   sudo apt-get install libudev-dev
-   ```
-   
-   On fedora:
-   ```bash
-   sudo dnf install libudev-devel
-   ```
+### System libraries
 
-3. Build the project:
-    ```bash
-    cmake -B build .
-    cd build/
-    make
-    ```
+Depending on your OS, install the following **development libraries**:
+
+#### **Ubuntu / Debian**
+
+```bash
+sudo apt update
+sudo apt install build-essential cmake libudev-dev \
+libopenal-dev libvorbis-dev libogg-dev libflac-dev libfreetype6-dev
+```
+
+#### **Fedora**
+
+```bash
+sudo dnf install gcc-c++ cmake libudev-devel \
+openal-soft-devel libvorbis-devel libogg-devel flac-devel freetype-devel
+```
+
+#### **Arch Linux**
+
+```bash
+sudo pacman -S base-devel cmake libudev openal libvorbis libogg flac freetype2
+```
+
+> These packages cover SFML dependencies for **Audio and Graphics** (OpenAL, Vorbis, FLAC, FreeType).
+
+---
+
+## Build the project
+
+```bash
+cmake -B build .
+cd build/
+make
+```
+
 ---
 
 ## Run the game
 
-1. Start the Server:
+### Start the Server
 
-    Make sure to be in **Agario/**
+```bash
+./build/server/Server
+```
 
-    ```bash
-    ./build/server/Server
-    ```
+### Start the Client
 
-2. Start the Client:
+Open a new terminal and make sure to be in the `Agario/` directory.
 
-    Open a new terminal and make sure to be in **Agario/**
+* With custom IP and port:
 
-    You can specify the server IP address and port as arguments:
+```bash
+./build/client/Client -p 8080 -h "127.0.0.1"
+```
 
-    ```bash
-    ./build/client/Client -p 8080 -h "127.0.0.1"
-    ```
+* Without arguments (defaults to `127.0.0.1:8080`):
 
-    Or you can run the client without arguments:
-
-    ```bash
-    ./build/client/Client
-    ```
-
-    If you run the client without arguments, by default it will connect to the server at ip 127.0.0.1 and port 8080.
+```bash
+./build/client/Client
+```
 
 ---
 
 ## Documentation
 
-To access the project documentation, use `mdbook`.
+The documentation is built with **mdBook**.
 
-### Installing `mdbook` on Ubuntu
+### Install mdBook
 
-1. Install `cargo` (if not already installed):
-    ```bash
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-    ```
-    Then reload your shell:
-    ```bash
-    source $HOME/.cargo/env
-    ```
+#### Using Rust/Cargo (recommended)
 
-2. Install `mdbook`:
-    ```bash
-    cargo install mdbook
-    ```
+1. Install Rust and Cargo if not installed:
 
-3. Verify the installation:
-    ```bash
-    mdbook --version
-    ```
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source $HOME/.cargo/env
+```
 
-### Running the documentation server
+2. Install mdBook:
 
-1. Navigate to the `docs/` directory:
-    ```bash
-    cd docs
-    ```
-2. Start the documentation server:
-    ```bash
-    mdbook serve
-    ```
-3. Open your browser and go to:
-    ```
-    http://localhost:3000
-    ```
+```bash
+cargo install mdbook --version 0.5.2
+```
 
-This will provide an interactive version of the documentation accessible from your web browser.
+3. Verify installation:
+
+```bash
+mdbook --version
+# Should output: mdbook v0.5.2
+```
+
+### Run the documentation server
+
+```bash
+cd docs
+mdbook serve
+```
+
+Open your browser at: [http://localhost:3000](http://localhost:3000)
+This will provide an interactive version of the documentation.
 
 ---
 
 ## Project structure
 
-`client/`: Contains the client-side game logic and graphics.
-
-`docs/`: Contains the project documentation.
-
-`external/`: External library needed.
-
-`font/`: Text font.
-
-`game_engine/`: Handles server-side game_engine.
-
-`server/`: Handles server-side networking.
+* **client/**: Contains the client-side game logic and graphics.
+* **docs/**: Contains the project documentation.
+* **external/**: External libraries needed.
+* **font/**: Text font resources.
+* **game_engine/**: Handles server-side game engine logic.
+* **server/**: Handles server-side networking.

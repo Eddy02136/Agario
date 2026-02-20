@@ -1,6 +1,5 @@
 [book]
 authors = ["Eddy Gardes, Alexandre Chouteau"]
 language = "en"
-multilingual = false
 src = "src"
 title = "Agario_book"
